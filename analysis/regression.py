@@ -289,7 +289,7 @@ def predict_result(*data):
 
 
 # 小波分解降噪与重构
-def pywt_data_new(address1,address2):
+def pywt_data_new(address1, address2):
     data = pd.read_csv(address1, usecols=['speed']).values.tolist()
     data_access = []
     for i in range(len(data)):
@@ -312,26 +312,39 @@ def pywt_data_new(address1,address2):
                 tmp[k] = 0.0
         thcoeffs.append(tmp)
     recoeffs = pywt.waverec([coeffs[0], np.array(thcoeffs[0]), np.array(thcoeffs[1])], 'db8')
-    write_wave_excel(recoeffs.tolist(), address2)
-    return data_access, coeffs[0], coeffs[1], coeffs[2]
+    # write_wave_excel(recoeffs.tolist(), address2)
+    return data_access, coeffs[0], coeffs[1], coeffs[2], recoeffs
 
 
-def test_LinearSVR_epsilon_new(address, epsilon):
+def test_LinearSVR_epsilon_new(address):
     X_train, X_test, y_train, y_test = load_data_regression(address)
-    regr = svm.LinearSVR(epsilon=epsilon, loss='squared_epsilon_insensitive')
-    regr.fit(X_train, y_train)
-    train_score = regr.score(X_train, y_train)
-    test_score = regr.score(X_test, y_test)
-    return train_score, test_score
+    epsilons = np.logspace(-2, 2)
+    train_scores = []
+    test_scores = []
+    for epsilon in epsilons:
+        regr = svm.LinearSVR(epsilon=epsilon, loss='squared_epsilon_insensitive')
+        regr.fit(X_train, y_train)
+        train_scores.append(regr.score(X_train, y_train))
+        test_scores.append(regr.score(X_test, y_test))
+    return epsilons.tolist(), train_scores, test_scores
 
 
-def test_LinearSVR_C_new(address, c):
+def test_LinearSVR_C_new(address):
     X_train, X_test, y_train, y_test = load_data_regression(address)
-    regr = svm.LinearSVR(C=c, loss='squared_epsilon_insensitive')
-    regr.fit(X_train, y_train)
-    train_score = regr.score(X_train, y_train)
-    test_score = regr.score(X_test, y_test)
-    return train_score, test_score
+    Cs = np.logspace(-2, 2)
+    train_scores = []
+    test_scores = []
+    for C in Cs:
+        regr = svm.LinearSVR(C=C, loss='squared_epsilon_insensitive')
+        regr.fit(X_train, y_train)
+        train_scores.append(regr.score(X_train, y_train))
+        test_scores.append(regr.score(X_test, y_test))
+    return Cs.tolist(), train_scores, test_scores
+    # regr = svm.LinearSVR(C=c, loss='squared_epsilon_insensitive')
+    # regr.fit(X_train, y_train)
+    # train_score = regr.score(X_train, y_train)
+    # test_score = regr.score(X_test, y_test)
+    # return train_score, test_score
 
 
 def predict_result_new(address, ep, c):
@@ -339,5 +352,6 @@ def predict_result_new(address, ep, c):
     regr = svm.LinearSVR(epsilon=ep, C=c, loss='squared_epsilon_insensitive')
     regr.fit(X_train, y_train)
     y_predict = regr.predict(X_test)
-    return y_test[0:10], y_predict[0:10].tolist()
+    x_label = [i for i in range(len(y_test))]
+    return x_label, y_test, y_predict.tolist()
 

@@ -6,7 +6,9 @@ import json
 from .models import Book
 from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse
+from analysis import regression
 # Create your views here.
+
 
 @require_http_methods(["GET"])
 def add_book(request):
@@ -20,6 +22,7 @@ def add_book(request):
         response['msg'] = str(e)
         response['error_num'] = 1
     return JsonResponse(response)
+
 
 @require_http_methods(["GET"])
 def show_books(request):
@@ -72,7 +75,6 @@ def show_books(request):
     return JsonResponse(response)
 
 
-
 # 定义功能
 def add_args(a, b):
     return a + b
@@ -87,8 +89,6 @@ def post2(request):
         print('this')
         print(request.POST)
         if request.POST:
-            #a = request.POST.get('a', 0)
-            # b = request.POST.get('b', 0)
             print('a+b')
             post_body = request.body
             post_body = json.load(post_body)
@@ -108,7 +108,6 @@ def post2(request):
         return HttpResponse('方法错误')
 
 
-from analysis import regression
 @csrf_exempt
 def pywt(request):
     if request.method == 'POST':  # 当提交表单时
@@ -119,11 +118,12 @@ def pywt(request):
             address2 = request.POST.get('address2', 0)
             # 判断参数中是否含有a和b
             if address1 and address2:
-                original_data, level0, level1, level2 = regression.pywt_data_new(address1, address2)
+                original_data, level0, level1, level2, recoeffs = regression.pywt_data_new(address1, address2)
                 dic['original-data'] = original_data
                 dic['level10'] = level0.tolist()
                 dic['level11'] = level1.tolist()
                 dic['level12'] = level2.tolist()
+                dic['recoeffs'] = recoeffs.tolist()
                 dic = json.dumps(dic)
                 return HttpResponse(dic)
             else:
@@ -140,12 +140,12 @@ def test_ep(request):
         dic = {}
         if request.POST:
             address = request.POST.get('address', 0)
-            ep = float(request.POST.get('ep', 0))
             # 判断参数中是否含有a和b
-            if address and ep:
-                train_score,test_score = regression.test_LinearSVR_epsilon_new(address, ep)
-                dic['train_score'] = train_score
-                dic['test_score'] = test_score
+            if address:
+                epsilons, train_scores, test_scores = regression.test_LinearSVR_epsilon_new(address)
+                dic['epsilons'] = train_scores
+                dic['train_scores'] = train_scores
+                dic['test_scores'] = test_scores
                 dic = json.dumps(dic)
                 return HttpResponse(dic)
             else:
@@ -162,12 +162,12 @@ def test_c(request):
         dic = {}
         if request.POST:
             address = request.POST.get('address', 0)
-            c = float(request.POST.get('c', 0))
             # 判断参数中是否含有a和b
-            if address and c:
-                train_score, test_score = regression.test_LinearSVR_C_new(address,c)
-                dic['train_score'] = train_score
-                dic['test_score'] = test_score
+            if address:
+                Cs, train_scores, test_scores = regression.test_LinearSVR_C_new(address)
+                dic['Cs'] = Cs
+                dic['train_scores'] = train_scores
+                dic['test_scores'] = test_scores
                 dic = json.dumps(dic)
                 return HttpResponse(dic)
             else:
@@ -212,11 +212,110 @@ def predict(request):
             ep = float(request.POST.get('ep', 0))
             c = float(request.POST.get('c', 0))
             if address and ep and c:
-                y_test, y_predict = regression.predict_result_new(address, ep, c)
+                x_label, y_test, y_predict = regression.predict_result_new(address, ep, c)
+                dic['x_label'] = x_label
                 dic['y_test'] = y_test
                 dic['y_predict'] = y_predict
                 dic = json.dumps(dic)
                 return HttpResponse(dic)
+            else:
+                return HttpResponse('输入错误')
+        else:
+            return HttpResponse('输入为空')
+    else:
+        return HttpResponse('方法错误')
+
+
+from analysis import xml_maker
+@csrf_exempt
+def xml_make(request):
+    if request.method == 'POST':  # 当提交表单时
+        rq_p = request.POST
+        if request.POST:
+            post_body = json.loads(rq_p['data'])
+            xml_maker.xml_make(post_body)
+            if True:
+                xmFolder = ''
+                if post_body['theme'] == 'Atmosphere':
+                    xmlFolder = '大气环境'
+                elif post_body['theme'] == 'Ocean':
+                    xmlFolder = '海洋环境'
+                elif post_body['theme'] == 'Land':
+                    xmlFolder = '地形环境'
+                else:
+                    xmlFolder = '空间环境'
+                filePath = 'D:/综合自然环境数据立方库/' + xmlFolder + '/' + post_body['xmlName']
+                return HttpResponse(open(filePath, "rb"), content_type="text/xml")
+            else:
+                return HttpResponse('输入错误')
+        else:
+            return HttpResponse('输入为空')
+    else:
+        return HttpResponse('方法错误')
+
+
+@csrf_exempt
+def get_names(request):
+    from os import listdir
+    from analysis import xml_parser
+    if request.method == 'POST':  # 当提交表单时
+        if request.POST:
+            xmlFiles = []
+            theme = request.POST.get('theme', 0)
+            if theme:
+                # names = json.dumps(listdir(address))
+                address = 'D:\\综合自然环境数据立方库\\'
+                if theme == 'atmosphere':
+                    address = address + '大气环境'
+                elif theme == 'ocean':
+                    address = address + '海洋环境'
+                elif theme == 'land':
+                    address = address + '地形环境'
+                else:
+                    address = address + '空间环境'
+                names = listdir(address)
+                for name in names:
+                    dic = {}
+                    address1 = address + '\\' + name
+                    target = xml_parser.xml_to_str(address1)
+                    dic['name'] = name
+                    dic['treeData'] = target
+                    with open(address1, "r") as f:
+                        xml_str = f.readlines()
+                    for i in range(len(xml_str)):
+                        xml_str[i] = xml_str[i].replace('\n', '').replace('\t', '')
+                    dic['xmlStr'] = json.dumps(xml_str)
+                    dic['menuVisible'] = False
+                    xmlFiles.append(dic)
+                return HttpResponse(json.dumps(xmlFiles))
+            else:
+                return HttpResponse('输入错误')
+        else:
+            return HttpResponse('输入为空')
+    else:
+        return HttpResponse('方法错误')
+
+
+@csrf_exempt
+def wind_data(request):
+    if request.method == 'GET':
+        with open("windtp.json") as f:
+            loadData = json.load(f)
+            jsonData = json.dumps(loadData)
+        return HttpResponse(jsonData)
+    else:
+        return HttpResponse('方法错误')
+
+
+@csrf_exempt
+def delete_files(request):
+    from os import remove
+    if request.method == "POST":
+        if request.POST:
+            address = request.POST.get('address', 0)
+            if address:
+                remove(address)
+                return HttpResponse("成功删除{}".format(address))
             else:
                 return HttpResponse('输入错误')
         else:

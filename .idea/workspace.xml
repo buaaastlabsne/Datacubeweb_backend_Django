@@ -20,7 +20,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="8a666629-49b4-4005-a17c-cb4ccad11f4f" name="Default" comment="">
+      <change afterPath="$PROJECT_DIR$/analysis/xml_maker.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/analysis/xml_parser.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/windtp.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Datacubeweb_backend/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/Datacubeweb_backend/urls.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Datacubeweb_backend/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/Datacubeweb_backend/views.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/analysis/regression.py" beforeDir="false" afterPath="$PROJECT_DIR$/analysis/regression.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -47,19 +53,20 @@
   </component>
   <component name="PropertiesComponent">
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
-    <property name="last_opened_file_path" value="$USER_HOME$/Desktop/Datacubeweb_backend_Django" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="restartRequiresConfirmation" value="false" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RecentsManager">
-    <key name="CopyFile.RECENT_KEYS">
-      <recent name="D:\Datacubeweb_backend_Django" />
-    </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="D:\Datacubeweb_backend_Django" />
       <recent name="D:\Datacubeweb_backend_Django\Datacubeweb_backend" />
     </key>
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="D:\Datacubeweb_backend_Django" />
+    </key>
   </component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Python.manage">
     <configuration name="manage" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="Datacubeweb_backend_Django" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -81,9 +88,31 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="test" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Datacubeweb_backend_Django" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/analysis" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/analysis/test.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <recent_temporary>
       <list>
         <item itemvalue="Python.manage" />
+        <item itemvalue="Python.test" />
       </list>
     </recent_temporary>
   </component>
@@ -121,29 +150,60 @@
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state x="414" y="174" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.0.1920.1040@0.0.1920.1040" timestamp="1588648794772" />
-    <state x="740" y="274" key="FileChooserDialogImpl" timestamp="1588648763347">
+    <state x="740" y="274" key="FileChooserDialogImpl" timestamp="1588751963653">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state x="740" y="274" key="FileChooserDialogImpl/0.0.1920.1040@0.0.1920.1040" timestamp="1588648763347" />
-    <state width="1898" height="484" key="GridCell.Tab.0.bottom" timestamp="1588657198914">
+    <state x="740" y="274" key="FileChooserDialogImpl/0.0.1920.1040@0.0.1920.1040" timestamp="1588751963653" />
+    <state width="1898" height="455" key="GridCell.Tab.0.bottom" timestamp="1588778212697">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1898" height="484" key="GridCell.Tab.0.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1588657198914" />
-    <state width="1898" height="484" key="GridCell.Tab.0.center" timestamp="1588657198914">
+    <state width="1898" height="455" key="GridCell.Tab.0.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1588778212697" />
+    <state width="1898" height="455" key="GridCell.Tab.0.center" timestamp="1588778212697">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1898" height="484" key="GridCell.Tab.0.center/0.0.1920.1040@0.0.1920.1040" timestamp="1588657198914" />
-    <state width="1898" height="484" key="GridCell.Tab.0.left" timestamp="1588657198914">
+    <state width="1898" height="455" key="GridCell.Tab.0.center/0.0.1920.1040@0.0.1920.1040" timestamp="1588778212697" />
+    <state width="1898" height="455" key="GridCell.Tab.0.left" timestamp="1588778212697">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1898" height="484" key="GridCell.Tab.0.left/0.0.1920.1040@0.0.1920.1040" timestamp="1588657198914" />
-    <state width="1898" height="484" key="GridCell.Tab.0.right" timestamp="1588657198914">
+    <state width="1898" height="455" key="GridCell.Tab.0.left/0.0.1920.1040@0.0.1920.1040" timestamp="1588778212697" />
+    <state width="1898" height="455" key="GridCell.Tab.0.right" timestamp="1588778212697">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state width="1898" height="484" key="GridCell.Tab.0.right/0.0.1920.1040@0.0.1920.1040" timestamp="1588657198914" />
-    <state x="461" y="151" key="SettingsEditor" timestamp="1588648585811">
+    <state width="1898" height="455" key="GridCell.Tab.0.right/0.0.1920.1040@0.0.1920.1040" timestamp="1588778212697" />
+    <state width="1898" height="455" key="GridCell.Tab.1.bottom" timestamp="1588778212697">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state x="461" y="151" key="SettingsEditor/0.0.1920.1040@0.0.1920.1040" timestamp="1588648585811" />
+    <state width="1898" height="455" key="GridCell.Tab.1.bottom/0.0.1920.1040@0.0.1920.1040" timestamp="1588778212697" />
+    <state width="1898" height="455" key="GridCell.Tab.1.center" timestamp="1588778212697">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1898" height="455" key="GridCell.Tab.1.center/0.0.1920.1040@0.0.1920.1040" timestamp="1588778212697" />
+    <state width="1898" height="455" key="GridCell.Tab.1.left" timestamp="1588778212697">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1898" height="455" key="GridCell.Tab.1.left/0.0.1920.1040@0.0.1920.1040" timestamp="1588778212697" />
+    <state width="1898" height="455" key="GridCell.Tab.1.right" timestamp="1588778212697">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state width="1898" height="455" key="GridCell.Tab.1.right/0.0.1920.1040@0.0.1920.1040" timestamp="1588778212697" />
+    <state x="461" y="151" key="SettingsEditor" timestamp="1588691744062">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="461" y="151" key="SettingsEditor/0.0.1920.1040@0.0.1920.1040" timestamp="1588691744062" />
+    <state x="616" y="162" width="672" height="676" key="search.everywhere.popup" timestamp="1588700249715">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="616" y="162" width="672" height="676" key="search.everywhere.popup/0.0.1920.1040@0.0.1920.1040" timestamp="1588700249715" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <default-breakpoints>
+        <breakpoint type="python-exception">
+          <properties notifyOnTerminate="true" exception="BaseException">
+            <option name="notifyOnTerminate" value="true" />
+          </properties>
+        </breakpoint>
+      </default-breakpoints>
+    </breakpoint-manager>
   </component>
 </project>

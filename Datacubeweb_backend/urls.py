@@ -8,4 +8,8 @@ urlpatterns = [
     url(r'^c$', views.test_c),
     url(r'^epc$', views.test_ep_c),
     url(r'^predict$', views.predict),
-               ]
+    url(r'^xml$', views.xml_make),
+    url(r'^api/names$', views.get_names),
+    url(r'^api/windt', views.wind_data),
+    url(r'^api/delete', views.delete_files)
+]
