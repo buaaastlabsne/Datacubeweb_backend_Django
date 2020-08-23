@@ -11,5 +11,6 @@ urlpatterns = [
     url(r'^xml$', views.xml_make),
     url(r'^api/names$', views.get_names),
     url(r'^api/windt', views.wind_data),
-    url(r'^api/delete', views.delete_files)
+    url(r'^api/delete', views.delete_files),
+    url(r'data', views.get_data_for_plot),
 ]

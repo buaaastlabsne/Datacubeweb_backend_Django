@@ -322,3 +322,33 @@ def delete_files(request):
             return HttpResponse('输入为空')
     else:
         return HttpResponse('方法错误')
+
+@csrf_exempt
+def get_data_for_plot(request):
+    from analysis import universal_data_interface
+    if request.method == 'POST':
+        if request.POST:
+            Source = request.POST.get('source')
+            measure = request.POST.get('measure')
+            lonMax = int(request.POST.get('lonMax'))
+            lonMin = int(request.POST.get('lonMin'))
+            latMax = int(request.POST.get('latMax'))
+            latMin = int(request.POST.get('latMin'))
+            heightMax = int(request.POST.get('heightMax'))
+            heightMin = int(request.POST.get('heightMin'))
+            if Source and measure and lonMax and lonMin and latMax and latMin and heightMin and heightMax:
+                data = universal_data_interface.get_data(Source=Source, measure=measure,
+                                                        lonMin=lonMin, lonMax=lonMax,
+                                                        latMin=latMin, latMax=latMax,
+                                                        heightMin=heightMin, heightMax=heightMax,)
+                print(data)
+                if type(data)== type("0"):
+                    return  HttpResponseBadRequest
+                data = json.dumps(data)
+                return HttpResponse(data)
+            else:
+                return HttpResponse('输入错误')
+        else:
+            return HttpResponse('输入为空')
+    else:
+        return HttpResponse('方法错误')
