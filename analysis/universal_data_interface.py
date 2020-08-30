@@ -34,15 +34,23 @@ def get_data(Source="TPV",
         flag1 = True
         flag2 = True
         flag3 = True
+        axisName = []
         if lonMin == lonMax:
             flag+= 1
             flag1 = False
+        else:
+            axisName.append('longitude')
         if latMax == latMin:
             flag+=1
             flag2 =False
+        else:
+            axisName.append('latitude')
         if heightMax == heightMin:
             flag+= 1
             flag3 = False
+        else:
+            axisName.append('height')
+        axisName.append(measure)
         # 柱状图和折线图
         if flag == 2:
             factor1 = []
@@ -72,7 +80,7 @@ def get_data(Source="TPV",
                             elif flag3:
                                 factor2.append(k*500+500)
             print({"xAxisData":factor1,"yAxisData":factor2})
-            return {"xAxisData":factor1,"yAxisData":factor2}
+            return {"axisName": axisName, "xAxisData":factor1,"yAxisData":factor2}
         else:
             factor1 = []
             factor2 = []
@@ -100,7 +108,7 @@ def get_data(Source="TPV",
                             factor3.append(j * 0.2 + 108)
                             factor4.append(k * 500 + 500)
 
-            return {"xAxisData": factor2, "yAxisData": factor3, "zAxisData": factor4, "data":factor1}
+            return {"axisName": axisName, "xAxisData": factor2, "yAxisData": factor3, "zAxisData": factor4, "data":factor1}
     else:
         print("无效数据源，全部数据为{}".format(DATASOURCE.keys()))
         return "无效数据源，全部数据为{}".format(DATASOURCE.keys())
