@@ -5,7 +5,7 @@ from django.http import JsonResponse
 import json
 from .models import Book
 from django.views.decorators.csrf import csrf_exempt
-from django.http import HttpResponse
+from django.http import HttpResponse,HttpResponseBadRequest
 from analysis import regression
 # Create your views here.
 
@@ -352,3 +352,174 @@ def get_data_for_plot(request):
             return HttpResponse('输入为空')
     else:
         return HttpResponse('方法错误')
+
+@csrf_exempt
+def FCM(request):
+    from analysis import c_means
+    if request.method == 'POST':  # 当提交表单时
+        if request.POST:
+            address = request.POST.get('address', 0)
+            c = int(request.POST.get('c', 0))
+            m = int(request.POST.get('m', 0))
+            if address and c:
+                target = json.dumps(c_means.c_means_n(address, c, m))
+                return HttpResponse(target)
+            else:
+                return HttpResponse('输入错误')
+        else:
+            return HttpResponse('输入为空')
+    else:
+        return HttpResponse('方法错误')
+
+@csrf_exempt
+def cmeans(request):
+    from analysis import c_means
+    if request.method == 'POST':  # 当提交表单时
+        if request.POST:
+            address = request.POST.get('address', 0)
+            if address:
+                target = json.dumps(c_means.c_means_new(address).tolist())
+                return HttpResponse(target)
+            else:
+                return HttpResponse('输入错误')
+        else:
+            return HttpResponse('输入为空')
+
+    else:
+        return HttpResponse('方法错误')
+
+
+@csrf_exempt
+def bar(request):
+    from analysis import c_means
+    if request.method == 'GET':
+        y1s, y2s = c_means.bar_data()
+        dict = {"y1s": y1s, "y2s": y2s}
+        target = json.dumps(dict)
+        return HttpResponse(target)
+    else:
+        return HttpResponse('方法错误')
+
+
+@csrf_exempt
+def jms(request):
+    from analysis import c_means
+    if request.method == 'GET':
+        target = json.dumps(c_means.jms_data())
+        return HttpResponse(target)
+    else:
+        return HttpResponse('方法错误')
+
+
+@csrf_exempt
+def c_data(request):
+    from analysis import c_means
+    if request.method == 'GET':
+        if "type" in request.GET:
+            type = request.GET["type"]
+            if type == "jms":
+                target = json.dumps(c_means.jms_data())
+                return HttpResponse(target)
+            elif type == "bar":
+                y1s, y2s = c_means.bar_data()
+                dict = {"y1s": y1s, "y2s": y2s}
+                target = json.dumps(dict)
+                return HttpResponse(target)
+            else:
+                return HttpResponse('选择h合适的数据类型')
+        else:
+            return HttpResponse('选择返回的数据类型')
+    else:
+        return HttpResponse('方法错误')
+
+
+@csrf_exempt
+def Coeff(request):
+    from analysis import coeff
+    if request.method == 'POST':  # 当提交表单时
+        if request.POST:
+            address = request.POST.get('address', 0)
+            if address:
+                target = json.dumps(coeff.coeff(address))
+                return HttpResponse(target)
+            else:
+                return HttpResponse('输入错误')
+        else:
+            return HttpResponse('输入为空')
+    else:
+        return HttpResponse('方法错误')
+
+
+@csrf_exempt
+def Anova(request):
+    from analysis import coeff
+    if request.method == 'POST':  # 当提交表单时
+        if request.POST:
+            address = request.POST.get('address', 0)
+            if address:
+                target = json.dumps(coeff.anova(address))
+                return HttpResponse(target)
+            else:
+                return HttpResponse('输入错误')
+        else:
+            return HttpResponse('输入为空')
+    else:
+        return HttpResponse('方法错误')
+
+user = ""
+passwd = ""
+db = ""
+@csrf_exempt
+def connect(request):
+    from analysis import dataBase
+    if request.method == 'POST':
+        if request.POST:
+            global user, passwd, db
+            user = request.POST.get('user', 0)
+            passwd = request.POST.get('passwd', 0)
+            db = request.POST.get('db', 0)
+            if user and passwd and db:
+                state = dataBase.connect(user,passwd,db)
+                if state != 2:
+                    return HttpResponse('Unauthorized', status=401)
+                state = json.dumps(state)
+                return HttpResponse(state)
+            else:
+                return HttpResponse('输入错误')
+        else:
+            return HttpResponse('输入为空')
+    else:
+        return HttpResponse('方法错误')
+
+
+@csrf_exempt
+def query_tables(request):
+    from analysis import dataBase
+    if request.method == 'GET':
+        try:
+            tables = dataBase.query_tables(user, passwd, db)  # tables = [user, passwd, db]
+            tables = json.dumps(tables)
+            return HttpResponse(tables)
+        except:
+            return HttpResponse("请重新连接数据库")
+    else:
+        return HttpResponse('方法错误')
+
+
+@csrf_exempt
+def query_a_tb(request):
+    from analysis import dataBase
+    if request.method == 'POST':  # 当提交表单时
+        if request.POST:
+            tb = request.POST.get('table', 0)
+            if tb:
+                info =dataBase.query_a_table(user, passwd, db, tb)
+                info = json.dumps(info)
+                return HttpResponse(info)
+            else:
+                return HttpResponse('输入错误')
+        else:
+            return HttpResponse('输入为空')
+    else:
+        return HttpResponse('方法错误')
+

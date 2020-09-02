@@ -87,19 +87,41 @@ def add_class_tag(arr, u_rec):
     return arr_tagged
 
 
-ndArr = excel2Arr()
-center, u, u0, d, jm, p, fpc = cmeans(ndArr, m=2, c=4, error=0.05, maxiter=1000)
-# 加类别标签
-data_tag = add_class_tag(ndArr, u)
-plot_3d_scatter(np.array(data_tag).T.tolist(), center.tolist())
-pl.figure()
-pl.plot([i for i in range(p)], jm, label='FCM', c='b')
-jms = [16.0, 11.2, 9.2, 6.5, 4.2, 2.6, 1.8, 0.9, 0.4, 0.2]
-pl.plot([i for i in range(len(jms))],  jms, label='Optimized FCM', c='r')
-pl.xlabel('iter times')
-pl.ylabel('loss')
-pl.legend()
-pl.show()
+def c_means_new(address):
+    ndArr = excel2Arr(address)
+    print(ndArr.shape)
+    print(ndArr)
+    center, u, u0, d, jm, p, fpc = cmeans(ndArr, m=2, c=4, error=0.05, maxiter=1000)
+    data_tag = add_class_tag(ndArr, u)
+    print(data_tag)
+    return center
 
-bar_plot()
-print('hello1')
+
+def bar_data():
+    y1s = [35, 49, 44, 72]
+    y2s = [38, 47, 48, 67]
+    return y1s, y2s
+
+
+def jms_data():
+    jms = [16.0, 11.2, 9.2, 6.5, 4.2, 2.6, 1.8, 0.9, 0.4, 0.2]
+    return jms
+
+# c是聚类的类别
+def c_means_n(address, c, m):
+    ndArr = excel2Arr(address)  # (3,200)的
+    center, u, u0, d, jm, p, fpc = cmeans(ndArr, m=m, c=c, error=0.05, maxiter=1000)
+    print(center)
+    cluster = []
+    arr_t = ndArr.T.tolist()
+    u_t = u.T.tolist()
+
+    for i in range(c):
+        cluster.append([["x", "y", "z"], center[i].tolist()])
+    for i in range(len(arr_t)):
+        sq = u_t[i].index(max(u_t[i]))
+        cluster[sq].append(arr_t[i])
+    return cluster
+
+
+# addr = "E://datacube_new//yzz//Datacubeweb_backend_Django//analysis//OSDO_sample_data.csv"
