@@ -336,11 +336,15 @@ def get_data_for_plot(request):
             latMin = int(request.POST.get('latMin'))
             heightMax = int(request.POST.get('heightMax'))
             heightMin = int(request.POST.get('heightMin'))
+            ratio = int(request.POST.get('ratio'))
+            timeStamp = int(request.POST.get('timeStamp'))
             if Source and measure and lonMax and lonMin and latMax and latMin and heightMin and heightMax:
                 data = universal_data_interface.get_data(Source=Source, measure=measure,
                                                         lonMin=lonMin, lonMax=lonMax,
                                                         latMin=latMin, latMax=latMax,
-                                                        heightMin=heightMin, heightMax=heightMax,)
+                                                        heightMin=heightMin, heightMax=heightMax,
+                                                        ratio=ratio,
+                                                        timeStamp=timeStamp)
                 print(data)
                 if type(data)== type("0"):
                     return  HttpResponseBadRequest

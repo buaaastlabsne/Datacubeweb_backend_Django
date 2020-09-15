@@ -1,18 +1,90 @@
 # 提供统一的数据文件接口
 # author：yzz    2020.8.23
 import pandas as pd
+import numpy as np
 
 DATASOURCE = {"TPV": r"analysis/data/TPV.csv"}
 # DATASOURCE = {"TPV": r"./data/TPV.csv"}
 TPV_DATATYPE = {"temperature", "pressure"}
 TPV_INDEPENDENT = {"latitude", "longitude", "height"}
 
+
+# 线性拟合
+def line_fit(X,Y,x):
+    xArray = np.array(X)
+    yArray = np.array(Y)
+    f1 = np.polyfit(xArray, yArray, 3)
+    p1 = np.poly1d(f1)
+    return p1(x)
+
+
+# 最小二乘法拟合曲面
+def curve_fit(X,Y,Z,x,y):
+    n = len(X)
+    # 求方程系数
+    sigma_x = 0
+    for i in X: sigma_x += i
+    sigma_y = 0
+    for i in Y: sigma_y += i
+    sigma_z = 0
+    for i in Z: sigma_z += i
+    sigma_x2 = 0
+    for i in X: sigma_x2 += i * i
+    sigma_y2 = 0
+    for i in Y: sigma_y2 += i * i
+    sigma_x3 = 0
+    for i in X: sigma_x3 += i * i * i
+    sigma_y3 = 0
+    for i in Y: sigma_y3 += i * i * i
+    sigma_x4 = 0
+    for i in X: sigma_x4 += i * i * i * i
+    sigma_y4 = 0
+    for i in Y: sigma_y4 += i * i * i * i
+    sigma_x_y = 0
+    for i in range(n):
+        sigma_x_y += X[i] * Y[i]
+    # print(sigma_xy)
+    sigma_x_y2 = 0
+    for i in range(n): sigma_x_y2 += X[i] * Y[i] * Y[i]
+    sigma_x_y3 = 0
+    for i in range(n): sigma_x_y3 += X[i] * Y[i] * Y[i] * Y[i]
+    sigma_x2_y = 0
+    for i in range(n): sigma_x2_y += X[i] * X[i] * Y[i]
+    sigma_x2_y2 = 0
+    for i in range(n): sigma_x2_y2 += X[i] * X[i] * Y[i] * Y[i]
+    sigma_x3_y = 0
+    for i in range(n): sigma_x3_y += X[i] * X[i] * X[i] * Y[i]
+    sigma_z_x2 = 0
+    for i in range(n): sigma_z_x2 += Z[i] * X[i] * X[i]
+    sigma_z_y2 = 0
+    for i in range(n): sigma_z_y2 += Z[i] * Y[i] * Y[i]
+    sigma_z_x_y = 0
+    for i in range(n): sigma_z_x_y += Z[i] * X[i] * Y[i]
+    sigma_z_x = 0
+    for i in range(n): sigma_z_x += Z[i] * X[i]
+    sigma_z_y = 0
+    for i in range(n): sigma_z_y += Z[i] * Y[i]
+    # 给出对应方程的矩阵形式
+    a = np.array([[sigma_x4, sigma_x3_y, sigma_x2_y2, sigma_x3, sigma_x2_y, sigma_x2],
+                  [sigma_x3_y, sigma_x2_y2, sigma_x_y3, sigma_x2_y, sigma_x_y2, sigma_x_y],
+                  [sigma_x2_y2, sigma_x_y3, sigma_y4, sigma_x_y2, sigma_y3, sigma_y2],
+                  [sigma_x3, sigma_x2_y, sigma_x_y2, sigma_x2, sigma_x_y, sigma_x],
+                  [sigma_x2_y, sigma_x_y2, sigma_y3, sigma_x_y, sigma_y2, sigma_y],
+                  [sigma_x2, sigma_x_y, sigma_y2, sigma_x, sigma_y, n]])
+    b = np.array([sigma_z_x2, sigma_z_x_y, sigma_z_y2, sigma_z_x, sigma_z_y, sigma_z])
+    # 高斯消元解线性方程
+    res = np.linalg.solve(a, b)
+    z = res[0] * x * x + res[1] * x * y + res[2] * y * y + res[3] * x + res[4] * y + res[5]
+    return z
+
+
 def get_data(Source="TPV",
              measure="temperature",
              lonMin=108,lonMax=130,
              latMin=15,latMax=25,
              heightMin = 500,heightMax= 25000,
-             timeStamp=0):
+             timeStamp=0,
+             ratio=1):
     if Source == "TPV":
         # 高度500~25000m，间隔500m；共50
         # 北纬15~25，间隔0.2度：51
@@ -69,18 +141,28 @@ def get_data(Source="TPV",
             for k in range(50):
                 for j in range(111):
                     for i in range(51):
-                        cursor = i+j*111+k*5661
+                        cursor = i+j*111+k*5661+timeStamp*283050
                         if i1<=i<=i2 and j1<=j<=j2 and k1<=k<=k2:
                             lines = data.iloc[cursor].tolist()[0].split()
-                            factor1.append(lines[dt_i])
+                            factor1.append(float(lines[dt_i]))
                             if flag1:
                                 factor2.append(j*0.2+108)
                             elif flag2:
                                 factor2.append(i*0.2+15)
                             elif flag3:
                                 factor2.append(k*500+500)
-            print({"xAxisData":factor1,"yAxisData":factor2})
-            return {"axisName": axisName, "xAxisData":factor1,"yAxisData":factor2}
+            print({"xAxisData":factor2,"yAxisData":factor1})
+            xData = []
+            yData = []
+            if ratio < len(factor2):
+                for i in range(len(factor2)//ratio):
+                    xi = np.array(factor2[i*ratio:(i+1)*ratio]).mean()
+                    xData.append(xi)
+                    yData.append(line_fit(factor2[i*ratio:(i+1)*ratio], factor1[i*ratio:(i+1)*ratio], xi))
+                # return {"axisName": axisName, "xAxisData": factor1, "yAxisData": factor2}
+                return {"axisName": axisName, "xAxisData": xData, "yAxisData": yData}
+            else:
+                return "分辨率设定不合适"
         else:
             factor1 = []
             factor2 = []
@@ -103,12 +185,77 @@ def get_data(Source="TPV",
                         cursor = i + j * 111 + k * 5661
                         if i1 <= i <= i2 and j1 <= j <= j2 and k1 <= k <= k2:
                             lines = data.iloc[cursor].tolist()[0].split()
-                            factor1.append(lines[dt_i])
+                            factor1.append(float(lines[dt_i]))
                             factor2.append(i * 0.2 + 15)
                             factor3.append(j * 0.2 + 108)
                             factor4.append(k * 500 + 500)
-
-            return {"axisName": axisName, "xAxisData": factor2, "yAxisData": factor3, "zAxisData": factor4, "data":factor1}
+            if (j2-j1+1)< ratio or (i2-i1+1)<ratio or (k2-k1+1)<ratio:
+                return "分辨率设定不合适"
+            else:
+                # 先对每一个高度上进行最小二乘曲面拟合
+                lat_offset = (i2-i1+1)//ratio
+                lon_offset = (j2-j1+1)//ratio
+                height_offset = (k2-k1+1)//ratio
+                new_x_data = []  # 存纬度
+                new_y_data = []  # 存经度
+                new_z_data = []  # 存高度
+                new_v_data = []  # 存值
+                for k in range(k2-k1+1):
+                    for j in range(lon_offset):
+                        for i in range(lat_offset):
+                            xData = []
+                            yData = []
+                            vData = []
+                            for jj in range(ratio):
+                                for ii in range(ratio):
+                                    # 第j层的第i个小块：ii每个小块中维度小循环的遍历 jj每个小块每层经度的遍历
+                                    xData.append(factor2[ii+jj*(i2-i1+1)+i*ratio+j*ratio*(i2-i1+1)+k*(i2-i1+1)*(j2-j1+1)])
+                                    yData.append(factor3[ii+jj*(i2-i1+1)+i*ratio+j*ratio*(i2-i1+1)+k*(i2-i1+1)*(j2-j1+1)])
+                                    vData.append(factor1[ii+jj*(i2-i1+1)+i*ratio+j*ratio*(i2-i1+1)+k*(i2-i1+1)*(j2-j1+1)])
+                            x_temp = np.array(xData).mean()
+                            y_temp = np.array(yData).mean()
+                            new_x_data.append(x_temp)
+                            new_y_data.append(y_temp)
+                            new_z_data.append(factor4[ii+jj*(i2-i1+1)+i*ratio+j*ratio*(i2-i1+1)+k*(i2-i1+1)*(j2-j1+1)])
+                            # print("xData", xData)
+                            # print("yData", yData)
+                            # print("vData", vData)
+                            # print("x_temp", x_temp)
+                            # print("y_temp", y_temp)
+                            new_v_data.append(curve_fit(xData, yData, vData, x_temp, y_temp))
+                print("k2-k1+1", k2 - k1 + 1)
+                print("lon_offset", lon_offset)
+                print("lat_offset", lat_offset)
+                print("***:", (k2 - k1 + 1) * lon_offset * lat_offset)
+                print("fact_len", len(new_x_data))
+                # 再对不同高度上的通过线性插值拟合
+                print("new_x_data",len(new_x_data),new_x_data)
+                print("new_y_data",len(new_y_data),new_y_data)
+                print("new_z_data",len(new_z_data),new_z_data)
+                print("new_v_data",len(new_v_data),new_v_data)
+                x_final_data = []
+                y_final_data = []
+                z_final_data = []
+                v_final_data = []
+                for k in range(height_offset):
+                    zData = []
+                    vData = []
+                    for j in range(lon_offset):
+                        for i in range(lat_offset):
+                            for kk in range(ratio):
+                                # print("************************************************************")
+                                # print(j,i,k,kk)
+                                # print(i+j*lat_offset+k*ratio*lon_offset*lat_offset+kk*ratio*lon_offset*lat_offset)
+                                zData.append(new_z_data[i+j*lat_offset+k*ratio*lon_offset*lat_offset+kk*lon_offset*lat_offset])
+                                vData.append(new_v_data[i+j*lat_offset+k*ratio*lon_offset*lat_offset+kk*lon_offset*lat_offset])
+                            z_temp = np.array(zData).mean()
+                            z_final_data.append(z_temp)
+                            v_final_data.append(line_fit(zData, vData, z_temp))
+                            x_final_data.append(new_x_data[i+j*lat_offset+k*ratio*lon_offset*lat_offset])
+                            y_final_data.append(new_x_data[i + j * lat_offset + k * ratio * lon_offset * lat_offset])
+            print(len(x_final_data))
+            return {"axisName": axisName, "xAxisData": x_final_data, "yAxisData": y_final_data, "zAxisData": z_final_data,
+                    "data": v_final_data}
     else:
         print("无效数据源，全部数据为{}".format(DATASOURCE.keys()))
         return "无效数据源，全部数据为{}".format(DATASOURCE.keys())
