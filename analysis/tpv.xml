@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+	<Schema name="TPV">
+		<DIMENSION>
+			<Dim name="time" range_max="2020" range_min="2019" resolution_ratio="60"/>
+			<Dim name="longitude" range_max="118" range_min="30" resolution_ratio="0.2"/>
+		</DIMENSION>
+		<Measures>
+			<Measure name="TEMPERATURE"/>
+			<Measure name="PRESSURE"/>
+			<Measure name="WIND_U"/>
+			<Measure name="WIND_V"/>
+			<Measure name="WIND_W"/>
+		</Measures>
+	</Schema>

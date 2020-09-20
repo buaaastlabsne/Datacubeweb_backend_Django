@@ -531,3 +531,19 @@ def query_a_tb(request):
     else:
         return HttpResponse('方法错误')
 
+@csrf_exempt
+def meta_data_parse(request):
+    from analysis import xml_parser_meta
+    if request.method == 'POST':  # 当提交表单时
+        if request.POST:
+            fileName = request.POST.get('fileName', 0)
+            if fileName:
+                info = xml_parser_meta.xml_to_str(fileName)
+                info = json.dumps(info)
+                return HttpResponse(info)
+            else:
+                return HttpResponse('输入错误')
+        else:
+            return HttpResponse('输入为空')
+    else:
+        return HttpResponse('方法错误')
