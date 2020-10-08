@@ -27,5 +27,6 @@ urlpatterns = [
     url(r'^api/cmeans/jms', views.jms),
     url(r'^api/cmeans/data', views.c_data),
 
-    url(r'^api/meta_parse', views.meta_data_parse)
+    url(r'^api/meta_parse', views.meta_data_parse),
+    url(r'^api/meta_make', views.xml_make_std),
 ]

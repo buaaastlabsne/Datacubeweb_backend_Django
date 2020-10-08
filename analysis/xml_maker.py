@@ -64,17 +64,17 @@ def xml_make(dataDic):
         cube.appendChild(measure)
     xmlPath = ''
     if dataDic['theme'] == 'Atmosphere':
-        xmlPath = 'D:/综合自然环境数据立方库/大气环境/' + dataDic['xmlName']
+        xmlPath = 'E:/综合自然环境数据立方库/大气环境/' + dataDic['xmlName']
     elif dataDic['theme'] == 'Ocean':
-        xmlPath = 'D:/综合自然环境数据立方库/海洋环境/' + dataDic['xmlName']
+        xmlPath = 'E:/综合自然环境数据立方库/海洋环境/' + dataDic['xmlName']
     elif dataDic['theme'] == 'Land':
-        xmlPath = 'D:/综合自然环境数据立方库/地形环境/' + dataDic['xmlName']
+        xmlPath = 'E:/综合自然环境数据立方库/地形环境/' + dataDic['xmlName']
     else:
-        xmlPath = 'D:/综合自然环境数据立方库/空间环境/' + dataDic['xmlName']
+        xmlPath = 'E:/综合自然环境数据立方库/空间环境/' + dataDic['xmlName']
     f = open(xmlPath, 'w')
     doc.writexml(f, indent='\t', newl='\n', addindent='\t', encoding='utf-8')
     f.close()
     return
 
 
-# xml_make(dataDic)
+xml_make(dataDic)
