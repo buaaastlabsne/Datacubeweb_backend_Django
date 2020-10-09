@@ -111,14 +111,14 @@ def xml_make_std(config_dic=None, write_csv=False):
         for k, v in element.items():
             add_attribute(doc, meta_data, k, v)
 
-    xmlPath = r"analysis/xml&csv/"+config_dic['xmlName']
+    xmlPath = r"analysis/xmlCsv/"+config_dic['xmlName']
     f = open(xmlPath, 'w')
     doc.writexml(f, indent='\t', newl='\n', addindent='\t', encoding='GBK')
     f.close()
 
     if write_csv:
         # csvName是与本次生成的xml的同名的csv文件的名字，将要写入的是根据前端需求生成的数据
-        csvName = r"analysis/xml&csv/"+re.sub(".xml", "", str(config_dic["xmlName"]))+".csv"
+        csvName = r"analysis/xmlCsv/"+re.sub(".xml", "", str(config_dic["xmlName"]))+".csv"
         print("csv name:",csvName)
         # 此处读取的是完整的数据文件，这里暂时写死为TPV，
         data = pd.read_csv(DATASOURCE["TPV"])

@@ -8,7 +8,14 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse,HttpResponseBadRequest
 from analysis import regression
 # Create your views here.
-
+# 以下字典根据Environmental Data Coding Specification (EDCS)
+EDCS = {
+         "pressure": {"eac": "EAC_ATM_PRESSURE", "CHNName": "大气压强", "unit": "hPa"},
+         "temperature": {"eac": "EAC_AIR_TEMPERATURE", "CHNName": "大气温度", "unit": "℃"},
+         "wind_u": {"eac": "EAC_WIND_SPEED_U", "CHNName": "经向风速", "unit": "m/s"},
+         "wind_v": {"eac": "EAC_WIND_SPEED_V", "CHNName": "纬向风速", "unit": "m/s"},
+         "wind_w": {"eac": "EAC_WIND_SPEED_W", "CHNName": "垂直风速", "unit": "m/s"},
+}
 
 @require_http_methods(["GET"])
 def add_book(request):
@@ -330,15 +337,15 @@ def get_data_for_plot(request):
         if request.POST:
             Source = request.POST.get('source')
             measure = request.POST.get('measure')
-            lonMax = int(request.POST.get('lonMax'))
-            lonMin = int(request.POST.get('lonMin'))
-            latMax = int(request.POST.get('latMax'))
-            latMin = int(request.POST.get('latMin'))
+            lonMax = float(request.POST.get('lonMax'))
+            lonMin = float(request.POST.get('lonMin'))
+            latMax = float(request.POST.get('latMax'))
+            latMin = float(request.POST.get('latMin'))
             heightMax = int(request.POST.get('heightMax'))
             heightMin = int(request.POST.get('heightMin'))
-            ratio_lon = int(request.POST.get('ratioLon'))
-            ratio_lat = int(request.POST.get('ratioLat'))
-            ratio_h = int(request.POST.get('ratioHeight'))
+            ratio_lon = float(request.POST.get('ratioLon'))
+            ratio_lat = float(request.POST.get('ratioLat'))
+            ratio_h = float(request.POST.get('ratioHeight'))
             timeStamp = int(request.POST.get('timeStamp'))
             rotate = int(request.POST.get('rotate'))
             if Source and measure and lonMax and lonMin and latMax and latMin and heightMin and heightMax:
@@ -531,8 +538,10 @@ def query_a_tb(request):
     else:
         return HttpResponse('方法错误')
 
+
 @csrf_exempt
 def meta_data_parse(request):
+    # 此端口可以解析新统一格式的xml文件
     from analysis import xml_parser_meta
     if request.method == 'POST':  # 当提交表单时
         if request.POST:
@@ -543,6 +552,85 @@ def meta_data_parse(request):
                 return HttpResponse(info)
             else:
                 return HttpResponse('输入错误')
+        else:
+            return HttpResponse('输入为空')
+    else:
+        return HttpResponse('方法错误')
+
+
+@csrf_exempt
+def xml_make_std(request):
+    """此端口获取前端给出的查询命令，生成指定度量，指定范围，指定经度的csv格式环境数据及其对应的xml"""
+    from analysis import xml_maker_meta
+    if request.method == 'POST':
+        rq_p = request.POST
+        if request.POST:
+            # try:
+            post_body = json.loads(rq_p['data'])
+            # 根据前端信息修改xml-config,用于生成xml
+            config_dic = {
+                "xmlName": 'tpv_std_test.xml',
+                "model": "grid",
+                "format": "csv",
+                "ecc": "ECC_ATMOSPHERE_PROPERTY_SET",
+                "measures": [
+                    {"eac": "EAC_ATM_PRESSURE", "CHNName": "大气压强", "unit": "hPa"},
+                    {"eac": "EAC_AIR_TEMPERATURE", "CHNName": "大气温度", "unit": "℃"},
+                    {"eac": "EAC_WIND_SPEED_U", "CHNName": "经向风速", "unit": "m/s"},
+                    {"eac": "EAC_WIND_SPEED_V", "CHNName": "纬向风速", "unit": "m/s"},
+                    {"eac": "EAC_WIND_SPEED_W", "CHNName": "垂直风速", "unit": "m/s"},
+                ],
+                "data_type": "double",
+                "range": [
+                    {"time_start": "20110428120000", "time_delta": "900", "time_n": "9"},
+                    {"longitude_min": "114.014400", "longitude_max": "116.863300", "longitude_delta": "0.2"},
+                    {"latitude_min": "18.047620", "latitude_max": "19.952380", "latitude_delta": "0.2"},
+                    # {"heights": "106.655  154.066  204.447  257.986  ","height_n": "4"},
+                    {"height_max": "25000", "height_min": "500", "height_delta": "500"}
+                ]
+            }
+
+            if "xmlName" in post_body:
+                config_dic["xmlName"] = post_body["xmlName"]+".xml"
+            if "time" in post_body:
+                config_dic["range"][0]["time_start"] = post_body["time"][0]
+                config_dic["range"][0]["time_delta"] = post_body["time"][1]
+                config_dic["range"][0]["time_n"] = post_body["time"][2]
+            if "longitude" in post_body:
+                config_dic["range"][1]["longitude_min"] = post_body["longitude"][0]
+                config_dic["range"][1]["longitude_max"] = post_body["longitude"][1]
+                config_dic["range"][1]["longitude_delta"] = post_body["longitude"][2]
+            if "latitude" in post_body:
+                config_dic["range"][2]["latitude_min"] = post_body["latitude"][0]
+                config_dic["range"][2]["latitude_max"] = post_body["latitude"][1]
+                config_dic["range"][2]["latitude_delta"] = post_body["latitude"][2]
+            if "height" in post_body:
+                config_dic["range"][3]["height_min"] = post_body["height"][0]
+                config_dic["range"][3]["height_max"] = post_body["height"][1]
+                config_dic["range"][3]["height_delta"] = post_body["height"][2]
+            if "variables" in post_body:
+                config_dic["measures"] = []
+                for variable in post_body["variables"]:
+                    config_dic["measures"].append(EDCS[variable])
+            # 生成包含临时生成的查询信息的xml文件
+            xml_maker_meta.xml_make_std(config_dic=config_dic, write_csv=True)
+            # 保存临时xml文件
+            # xmlFolder = 'xml'
+            # if post_body['theme'] == 'Atmosphere':
+            #     xmlFolder = '大气环境'
+            # elif post_body['theme'] == 'Ocean':
+            #     xmlFolder = '海洋环境'
+            # elif post_body['theme'] == 'Land':
+            #     xmlFolder = '地形环境'
+            # else:
+            #     xmlFolder = '空间环境'
+            # 下面这里只是为了读文件返还给前端
+            # filePath = 'E:/综合自然环境数据立方库/' + xmlFolder + '/' + post_body['xmlName']
+            filePath = r"analysis/xmlCsv/"+config_dic["xmlName"]
+            return HttpResponse(open(filePath, "rb"), content_type="text/xml")
+            # except:
+            #     print("字典信息配置错误")
+            #     return HttpResponse('输入错误')
         else:
             return HttpResponse('输入为空')
     else:
