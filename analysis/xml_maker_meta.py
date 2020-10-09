@@ -22,8 +22,8 @@ config_dic_default = {
     "format": "csv",
     "ecc": "ECC_ATMOSPHERE_PROPERTY_SET",
     "measures": [
-        {"eac": "EAC_ATM_PRESSURE", "CHNName": "大气压强", "unit": "hPa"},
         {"eac": "EAC_AIR_TEMPERATURE", "CHNName": "大气温度", "unit": "℃"},
+        {"eac": "EAC_ATM_PRESSURE", "CHNName": "大气压强", "unit": "hPa"},
         {"eac": "EAC_WIND_SPEED_U", "CHNName": "经向风速", "unit": "m/s"},
         {"eac": "EAC_WIND_SPEED_V", "CHNName": "纬向风速", "unit": "m/s"},
         {"eac": "EAC_WIND_SPEED_W", "CHNName": "垂直风速", "unit": "m/s"},
@@ -90,8 +90,19 @@ def xml_make(dataDic):
 
 
 def xml_make_std(config_dic=None, write_csv=False):
-    if config_dic == None:
+    if config_dic is None:
         config_dic = config_dic_default
+
+    # 根据主题选择csv文件与xml文件所保存的位置
+    if config_dic['theme'] == 'Atmosphere':
+        xmlFolder = '大气环境'
+    elif config_dic['theme'] == 'Ocean':
+        xmlFolder = '海洋环境'
+    elif config_dic['theme'] == 'Land':
+        xmlFolder = '地形环境'
+    else:
+        xmlFolder = '空间环境'
+
     doc = Document()
     meta_data = doc.createElement('metadata')
     doc.appendChild(meta_data)
@@ -111,17 +122,17 @@ def xml_make_std(config_dic=None, write_csv=False):
         for k, v in element.items():
             add_attribute(doc, meta_data, k, v)
 
-    xmlPath = r"analysis/xmlCsv/"+config_dic['xmlName']
+    xmlPath = r"analysis/xmlCsv/"+xmlFolder+'/'+config_dic['xmlName']
     f = open(xmlPath, 'w')
     doc.writexml(f, indent='\t', newl='\n', addindent='\t', encoding='GBK')
     f.close()
 
     if write_csv:
         # csvName是与本次生成的xml的同名的csv文件的名字，将要写入的是根据前端需求生成的数据
-        csvName = r"analysis/xmlCsv/"+re.sub(".xml", "", str(config_dic["xmlName"]))+".csv"
+        csvName = r"analysis/xmlCsv/" + xmlFolder + '/'+re.sub(".xml", "", str(config_dic["xmlName"]))+".csv"
         print("csv name:",csvName)
         # 此处读取的是完整的数据文件，这里暂时写死为TPV，
-        data = pd.read_csv(DATASOURCE["TPV"])
+        data = pd.read_csv(DATASOURCE["TPV"], header=None)
 
         lonMax = float(config_dic["range"][1]["longitude_max"])
         lonMin = float(config_dic["range"][1]["longitude_min"])
@@ -142,18 +153,27 @@ def xml_make_std(config_dic=None, write_csv=False):
 
         measure_serial = set()
         for measure in config_dic["measures"]:
-            if "PRESSURE" in measure["eac"]:
-                measure_serial.add(0)
             if "TEMPERATURE" in measure["eac"]:
+                measure_serial.add(0)
+            if "PRESSURE" in measure["eac"]:
                 measure_serial.add(1)
-            if "PRESSURE" in measure["eac"]:
+            if "WIND_SPEED_U" in measure["eac"]:
                 measure_serial.add(2)
-            if "PRESSURE" in measure["eac"]:
+            if "WIND_SPEED_V" in measure["eac"]:
                 measure_serial.add(3)
-            if "PRESSURE" in measure["eac"]:
+            if "WIND_SPEED_W" in measure["eac"]:
                 measure_serial.add(4)
         measure_serial = list(measure_serial)
         measure_serial.sort()
+
+        with open(csvName, 'a') as f:
+            csvHeader = ""
+            allHeaders = ["temperature", "pressure",  "wind_speed_u", "wind_speed_v", "wind_speed_w"]
+            for m in measure_serial:
+                csvHeader += (allHeaders[m] + ",")
+            csvHeader += "latitude,longitude,height"
+            csvHeader += "\n"
+            f.writelines(csvHeader)
 
         k_dt = 0
         j_dt = 0
@@ -169,13 +189,13 @@ def xml_make_std(config_dic=None, write_csv=False):
                     if cursor == i_dt*latDelta+j_dt*111*lonDelta+k_dt*5661*heightDelta:
                         write_flag = True
                     elif cursor == (i_dt+1)*latDelta+j_dt*111*lonDelta+k_dt*5661*heightDelta:
-                        write_flag =True
+                        write_flag = True
                         i_dt += 1
                     elif cursor == i_dt*latDelta+(j_dt+1)*111*lonDelta+k_dt*5661*heightDelta:
-                        write_flag =True
+                        write_flag = True
                         j_dt += 1
                     elif cursor == i_dt*latDelta+j_dt*111*lonDelta+(k_dt+1)*5661*heightDelta:
-                        write_flag =True
+                        write_flag = True
                         k_dt += 1
 
                     if i1 <= i <= i2 and j1 <= j <= j2 and k1 <= k <= k2 and write_flag:
@@ -183,6 +203,7 @@ def xml_make_std(config_dic=None, write_csv=False):
                         line_to_write = ""
                         for m in measure_serial:
                             line_to_write += (lines[m]+",")
+                        line_to_write += str(i/5+15)+","+str(i/5+108)+","+str(i*500+500)
                         line_to_write += "\n"
                         with open(csvName, 'a') as f:
                             f.writelines(line_to_write)

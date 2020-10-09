@@ -569,13 +569,14 @@ def xml_make_std(request):
             post_body = json.loads(rq_p['data'])
             # 根据前端信息修改xml-config,用于生成xml
             config_dic = {
+                'theme': 'Atmosphere',
                 "xmlName": 'tpv_std_test.xml',
                 "model": "grid",
                 "format": "csv",
                 "ecc": "ECC_ATMOSPHERE_PROPERTY_SET",
                 "measures": [
-                    {"eac": "EAC_ATM_PRESSURE", "CHNName": "大气压强", "unit": "hPa"},
                     {"eac": "EAC_AIR_TEMPERATURE", "CHNName": "大气温度", "unit": "℃"},
+                    {"eac": "EAC_ATM_PRESSURE", "CHNName": "大气压强", "unit": "hPa"},
                     {"eac": "EAC_WIND_SPEED_U", "CHNName": "经向风速", "unit": "m/s"},
                     {"eac": "EAC_WIND_SPEED_V", "CHNName": "纬向风速", "unit": "m/s"},
                     {"eac": "EAC_WIND_SPEED_W", "CHNName": "垂直风速", "unit": "m/s"},
@@ -612,21 +613,22 @@ def xml_make_std(request):
                 config_dic["measures"] = []
                 for variable in post_body["variables"]:
                     config_dic["measures"].append(EDCS[variable])
+            if "theme" in post_body:
+                config_dic["theme"] = post_body["theme"]
             # 生成包含临时生成的查询信息的xml文件
             xml_maker_meta.xml_make_std(config_dic=config_dic, write_csv=True)
             # 保存临时xml文件
-            # xmlFolder = 'xml'
-            # if post_body['theme'] == 'Atmosphere':
-            #     xmlFolder = '大气环境'
-            # elif post_body['theme'] == 'Ocean':
-            #     xmlFolder = '海洋环境'
-            # elif post_body['theme'] == 'Land':
-            #     xmlFolder = '地形环境'
-            # else:
-            #     xmlFolder = '空间环境'
+            if config_dic['theme'] == 'Atmosphere':
+                xmlFolder = '大气环境'
+            elif config_dic['theme'] == 'Ocean':
+                xmlFolder = '海洋环境'
+            elif config_dic['theme'] == 'Land':
+                xmlFolder = '地形环境'
+            else:
+                xmlFolder = '空间环境'
             # 下面这里只是为了读文件返还给前端
             # filePath = 'E:/综合自然环境数据立方库/' + xmlFolder + '/' + post_body['xmlName']
-            filePath = r"analysis/xmlCsv/"+config_dic["xmlName"]
+            filePath = r"analysis/xmlCsv/"+ xmlFolder + '/'+config_dic["xmlName"]
             return HttpResponse(open(filePath, "rb"), content_type="text/xml")
             # except:
             #     print("字典信息配置错误")
