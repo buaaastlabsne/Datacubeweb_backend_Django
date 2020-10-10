@@ -14,7 +14,7 @@ dataDic = {
     "latitude":["15","25"],
     "height":["500","25000"],
     'ratio': ['0.2', '0.2','500'],  # 最小分辨率
-    'measure': ["TEMPERATURE", "PRESSURE"],  # 环境要素
+    'measure': ["AIR_TEMPERATURE", "ATM_PRESSURE"],  # 环境要素
 }
 config_dic_default = {
     "xmlName": 'tpv_std.xml',
@@ -152,10 +152,12 @@ def xml_make_std(config_dic=None, write_csv=False):
         k2 = int((heightMax - 500) / 500)
 
         measure_serial = set()
+        print("config_dicmeasures", config_dic["measures"])
+
         for measure in config_dic["measures"]:
-            if "TEMPERATURE" in measure["eac"]:
+            if "AIR_TEMPERATURE" in measure["eac"]:
                 measure_serial.add(0)
-            if "PRESSURE" in measure["eac"]:
+            if "ATM_PRESSURE" in measure["eac"]:
                 measure_serial.add(1)
             if "WIND_SPEED_U" in measure["eac"]:
                 measure_serial.add(2)
@@ -168,10 +170,10 @@ def xml_make_std(config_dic=None, write_csv=False):
 
         with open(csvName, 'a') as f:
             csvHeader = ""
-            allHeaders = ["temperature", "pressure",  "wind_speed_u", "wind_speed_v", "wind_speed_w"]
+            allHeaders = ["AIR_TEMPERATURE", "ATM_PRESSURE",  "WIND_SPEED_U", "WIND_SPEED_V", "WIND_SPEED_W"]
             for m in measure_serial:
                 csvHeader += (allHeaders[m] + ",")
-            csvHeader += "latitude,longitude,height"
+            csvHeader += "LATITUDE,LONGITUDE,HEIGHT"
             csvHeader += "\n"
             f.writelines(csvHeader)
 

@@ -10,12 +10,13 @@ from analysis import regression
 # Create your views here.
 # 以下字典根据Environmental Data Coding Specification (EDCS)
 EDCS = {
-         "pressure": {"eac": "EAC_ATM_PRESSURE", "CHNName": "大气压强", "unit": "hPa"},
-         "temperature": {"eac": "EAC_AIR_TEMPERATURE", "CHNName": "大气温度", "unit": "℃"},
-         "wind_u": {"eac": "EAC_WIND_SPEED_U", "CHNName": "经向风速", "unit": "m/s"},
-         "wind_v": {"eac": "EAC_WIND_SPEED_V", "CHNName": "纬向风速", "unit": "m/s"},
-         "wind_w": {"eac": "EAC_WIND_SPEED_W", "CHNName": "垂直风速", "unit": "m/s"},
+         "ATM_PRESSURE": {"eac": "EAC_ATM_PRESSURE", "CHNName": "大气压强", "unit": "hPa"},
+         "AIR_TEMPERATURE": {"eac": "EAC_AIR_TEMPERATURE", "CHNName": "大气温度", "unit": "℃"},
+         "WIND_SPEED_U": {"eac": "EAC_WIND_SPEED_U", "CHNName": "经向风速", "unit": "m/s"},
+         "WIND_SPEED_V": {"eac": "EAC_WIND_SPEED_V", "CHNName": "纬向风速", "unit": "m/s"},
+         "WIND_SPEED_W": {"eac": "EAC_WIND_SPEED_W", "CHNName": "垂直风速", "unit": "m/s"},
 }
+
 
 @require_http_methods(["GET"])
 def add_book(request):
@@ -264,7 +265,7 @@ def xml_make(request):
 @csrf_exempt
 def get_names(request):
     from os import listdir
-    from analysis import xml_parser
+    from analysis import xml_parser_meta
     if request.method == 'POST':  # 当提交表单时
         if request.POST:
             xmlFiles = []
@@ -272,6 +273,7 @@ def get_names(request):
             if theme:
                 # names = json.dumps(listdir(address))
                 address = 'D:\\综合自然环境数据立方库\\'
+                address = 'E:\\datacube_new\\weekend\\Datacubeweb_backend_Django\\analysis\\xmlCsv\\'
                 if theme == 'atmosphere':
                     address = address + '大气环境'
                 elif theme == 'ocean':
@@ -282,18 +284,19 @@ def get_names(request):
                     address = address + '空间环境'
                 names = listdir(address)
                 for name in names:
-                    dic = {}
-                    address1 = address + '\\' + name
-                    target = xml_parser.xml_to_str(address1)
-                    dic['name'] = name
-                    dic['treeData'] = target
-                    with open(address1, "r") as f:
-                        xml_str = f.readlines()
-                    for i in range(len(xml_str)):
-                        xml_str[i] = xml_str[i].replace('\n', '').replace('\t', '')
-                    dic['xmlStr'] = json.dumps(xml_str)
-                    dic['menuVisible'] = False
-                    xmlFiles.append(dic)
+                    if ".xml" in name:
+                        dic = {}
+                        address1 = address + '\\' + name
+                        target = xml_parser_meta.xml_to_str_std(address1)  # target = xml_parser.xml_to_str(address1)
+                        dic['name'] = name
+                        dic['treeData'] = target
+                        with open(address1, "r") as f:
+                            xml_str = f.readlines()
+                        for i in range(len(xml_str)):
+                            xml_str[i] = xml_str[i].replace('\n', '').replace('\t', '')#.replace('\\','')
+                        dic['xmlStr'] = json.dumps(xml_str)
+                        dic['menuVisible'] = False
+                        xmlFiles.append(dic)
                 return HttpResponse(json.dumps(xmlFiles))
             else:
                 return HttpResponse('输入错误')
@@ -547,7 +550,7 @@ def meta_data_parse(request):
         if request.POST:
             fileName = request.POST.get('fileName', 0)
             if fileName:
-                info = xml_parser_meta.xml_to_str(fileName)
+                info = xml_parser_meta.xml_to_str_std(fileName)
                 info = json.dumps(info)
                 return HttpResponse(info)
             else:

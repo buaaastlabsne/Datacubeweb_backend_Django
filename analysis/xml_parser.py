@@ -71,3 +71,8 @@ def xml_to_str(filename):
 
     dic["children"] = children_list
     return [dic]
+
+
+file_name = "data/TPV.xml"
+ret = xml_to_str(file_name)
+print(ret)
