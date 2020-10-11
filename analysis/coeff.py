@@ -5,18 +5,31 @@ from statsmodels.stats.anova import anova_lm
 
 
 # 相关分析，计算三种系数
-def coeff(filename):
-    data = pd.read_excel(filename, header=None)
-    pearson = data.corr().iloc[0, 1]  # 计算pearson相关系数
-    kendall = data.corr('kendall').iloc[0, 1]  # Kendall Tau相关系数
-    spearman = data.corr('spearman').iloc[0, 1]  # spearman秩相关
-    # 生成绘图的数据
-    plotData = []
-    for index, row in data.iterrows():
-        # plotData.append({"gender": "male", "height": row[0], "weight": row[1]})
-        plotData.append([row[0], row[1]])
-    result = {"pearson": pearson, "kendall": kendall, "spearman": spearman, "data": plotData}
-    return result
+def coeff(filename=None, measures=None):
+    if measures is None:
+        print("Measures is None, calculate the first two measures in the csv file")
+        # data = pd.read_excel(filename, header=None)
+        data = pd.read_csv(filename)
+        pearson = data.corr().iloc[0, 1]  # 计算pearson相关系数
+        kendall = data.corr('kendall').iloc[0, 1]  # Kendall Tau相关系数
+        spearman = data.corr('spearman').iloc[0, 1]  # spearman秩相关
+        # 生成绘图的数据
+        plotData = []
+        for index, row in data.iterrows():
+            # plotData.append({"gender": "male", "height": row[0], "weight": row[1]})
+            plotData.append([row[0], row[1]])
+        result = {"pearson": pearson, "kendall": kendall, "spearman": spearman, "data": plotData}
+        return result
+    else:
+        data = pd.read_csv(filename)
+        pearson = data.corr().loc[measures[0], measures[1]]  # 计算pearson相关系数
+        kendall = data.corr('kendall').loc[measures[0], measures[1]]  # Kendall Tau相关系数
+        spearman = data.corr('spearman').loc[measures[0], measures[1]]  # spearman秩相关
+        plotData = []
+        for i in range(len(data[measures[0]])):
+            plotData.append([data[measures[0]][i],data[measures[1]][i]])
+        return {"pearson": pearson, "kendall": kendall, "spearman": spearman, "data": plotData}
+
 # io ="E:\\datacube_new\\yzz\\Datacubeweb_backend_Django\\analysis\\ptcoeff.xls"
 # r = coeff(io)
 
@@ -25,7 +38,7 @@ def coeff(filename):
 def anova(filename):
     df = pd.read_excel(filename, header=None)
     data = df.values.T
-    l =
+    l = len(data)  # l个水平
     n = len(data[0])   # 每组的数据量
     N = l*n  # 总样本数
     groupSum = []  # 每组总和

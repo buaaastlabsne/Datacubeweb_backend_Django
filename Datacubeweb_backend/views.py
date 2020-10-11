@@ -457,9 +457,15 @@ def Coeff(request):
     if request.method == 'POST':  # 当提交表单时
         if request.POST:
             address = request.POST.get('address', 0)
+            measure1 = request.POST.get('measure1', 0)
+            measure2 = request.POST.get('measure2', 0)
             if address:
-                target = json.dumps(coeff.coeff(address))
-                return HttpResponse(target)
+                if measure1 and measure2:
+                    target = json.dumps(coeff.coeff(filename=address, measures=[measure1, measure2]))
+                    return HttpResponse(target)
+                else:
+                    target = json.dumps(coeff.coeff(filename=address, measures=None))
+                    return HttpResponse(target)
             else:
                 return HttpResponse('输入错误')
         else:
