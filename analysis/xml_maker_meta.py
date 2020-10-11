@@ -130,7 +130,7 @@ def xml_make_std(config_dic=None, write_csv=False):
     if write_csv:
         # csvName是与本次生成的xml的同名的csv文件的名字，将要写入的是根据前端需求生成的数据
         csvName = r"analysis/xmlCsv/" + xmlFolder + '/'+re.sub(".xml", "", str(config_dic["xmlName"]))+".csv"
-        print("csv name:",csvName)
+        print("csv name:", csvName)
         # 此处读取的是完整的数据文件，这里暂时写死为TPV，
         data = pd.read_csv(DATASOURCE["TPV"], header=None)
 
@@ -188,15 +188,15 @@ def xml_make_std(config_dic=None, write_csv=False):
                 for i in range(51):
                     write_flag = False
                     cursor = i + j * 111 + k * 5661     # + timeStamp * 283050
-                    if cursor == i_dt*latDelta+j_dt*111*lonDelta+k_dt*5661*heightDelta:
+                    if cursor == i_dt*(latDelta/0.2)+j_dt*111*(lonDelta/0.2)+k_dt*5661*(heightDelta/500):
                         write_flag = True
-                    elif cursor == (i_dt+1)*latDelta+j_dt*111*lonDelta+k_dt*5661*heightDelta:
+                    elif cursor == (i_dt+1)*(latDelta/0.2)+j_dt*111*(lonDelta/0.2)+k_dt*5661*(heightDelta/500):
                         write_flag = True
                         i_dt += 1
-                    elif cursor == i_dt*latDelta+(j_dt+1)*111*lonDelta+k_dt*5661*heightDelta:
+                    elif cursor == i_dt*(latDelta/0.2)+(j_dt+1)*111*(lonDelta/0.2)+k_dt*5661*(heightDelta/500):
                         write_flag = True
                         j_dt += 1
-                    elif cursor == i_dt*latDelta+j_dt*111*lonDelta+(k_dt+1)*5661*heightDelta:
+                    elif cursor == i_dt*(latDelta/0.2)+j_dt*111*(lonDelta/0.2)+(k_dt+1)*5661*(heightDelta/500):
                         write_flag = True
                         k_dt += 1
 

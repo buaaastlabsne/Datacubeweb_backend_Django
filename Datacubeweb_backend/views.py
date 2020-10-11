@@ -371,6 +371,7 @@ def get_data_for_plot(request):
     else:
         return HttpResponse('方法错误')
 
+
 @csrf_exempt
 def FCM(request):
     from analysis import c_means
@@ -388,6 +389,7 @@ def FCM(request):
             return HttpResponse('输入为空')
     else:
         return HttpResponse('方法错误')
+
 
 @csrf_exempt
 def cmeans(request):
