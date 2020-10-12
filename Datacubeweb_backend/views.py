@@ -581,6 +581,7 @@ def xml_make_std(request):
             # 根据前端信息修改xml-config,用于生成xml
             config_dic = {
                 'theme': 'Atmosphere',
+                "factList": "TPV",
                 "xmlName": 'tpv_std_test.xml',
                 "model": "grid",
                 "format": "csv",
@@ -626,6 +627,8 @@ def xml_make_std(request):
                     config_dic["measures"].append(EDCS[variable])
             if "theme" in post_body:
                 config_dic["theme"] = post_body["theme"]
+            if "factList" in post_body:
+                config_dic["factList"] =post_body["factList"]
             # 生成包含临时生成的查询信息的xml文件
             xml_maker_meta.xml_make_std(config_dic=config_dic, write_csv=True)
             # 保存临时xml文件

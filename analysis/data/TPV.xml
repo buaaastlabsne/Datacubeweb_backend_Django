@@ -1,31 +1,34 @@
-<?xml version="1.0" encoding="utf-8"?>
-	<Schema name="Mondrian">
-		<Cube name="TPV">
-			<Table name="TPV"/>
-			<Dimension foreignKey="TIME" name="TimeDim">
-				<Hierarchy allMemberName="AllTime" hasAll="true" primaryKey="TIME">
-					<Table name="TIME"/>
-					<Level column="YEAR" name="year"/>
-					<Level column="QUARTER" name="quarter"/>
-					<Level column="MONTH" name="month"/>
-					<Level column="XUN" name="xun"/>
-					<Level column="DAY" name="day"/>
-					<Level column="HOUR" name="hour"/>
-				</Hierarchy>
-			</Dimension>
-			<Dimension foreignKey="LONGITUDE" name="LongitudeDim">
-				<Hierarchy allMemberName="AllLongitude" hasAll="true" primaryKey="LONGITUDE">
-					<Table name="LONGITUDE"/>
-					<Level column="LON_10" name="lon_10"/>
-					<Level column="LON_2" name="lon_2"/>
-					<Level column="LON_1" name="lon_1"/>
-					<Level column="LON_0_2" name="lon_0_2"/>
-				</Hierarchy>
-			</Dimension>
-			<Measure aggregator="avg" column="TEMPERATURE" name="temperature"/>
-			<Measure aggregator="avg" column="PRESSURE" name="pressure"/>
-			<Measure aggregator="avg" column="WIND_U" name="wind_u"/>
-			<Measure aggregator="avg" column="WIND_V" name="wind_v"/>
-			<Measure aggregator="avg" column="WIND_W" name="wind_w"/>
-		</Cube>
-	</Schema>
+<?xml version="1.0" encoding="GBK"?>
+	<metadata>
+		<attribute name="model" value="grid"/>
+		<attribute name="format" value="csv"/>
+		<attribute name="ecc" value="ECC_ATMOSPHERE_PROPERTY_SET"/>
+		<attribute name="eac" value="EAC_AIR_TEMPERATURE"/>
+		<attribute name="CHNName" value="大气温度"/>
+		<attribute name="unit" value="℃"/>
+		<attribute name="eac" value="EAC_ATM_PRESSURE"/>
+		<attribute name="CHNName" value="大气压强"/>
+		<attribute name="unit" value="hPa"/>
+		<attribute name="eac" value="EAC_WIND_SPEED_U"/>
+		<attribute name="CHNName" value="经向风速"/>
+		<attribute name="unit" value="m/s"/>
+		<attribute name="eac" value="EAC_WIND_SPEED_V"/>
+		<attribute name="CHNName" value="纬向风速"/>
+		<attribute name="unit" value="m/s"/>
+		<attribute name="eac" value="EAC_WIND_SPEED_W"/>
+		<attribute name="CHNName" value="垂直风速"/>
+		<attribute name="unit" value="m/s"/>
+		<attribute name="data_type" value="double"/>
+		<attribute name="time_start" value="20110428120000"/>
+		<attribute name="time_delta" value="900"/>
+		<attribute name="time_n" value="9"/>
+		<attribute name="longitude_min" value="108"/>
+		<attribute name="longitude_max" value="130"/>
+		<attribute name="longitude_delta" value="0.2"/>
+		<attribute name="latitude_min" value="15"/>
+		<attribute name="latitude_max" value="25"/>
+		<attribute name="latitude_delta" value="0.2"/>
+		<attribute name="height_max" value="25000"/>
+		<attribute name="height_min" value="500"/>
+		<attribute name="height_delta" value="500"/>
+	</metadata>
