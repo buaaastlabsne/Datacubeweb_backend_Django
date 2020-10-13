@@ -101,3 +101,67 @@ anova_results = anova_lm(ols(formula, df).fit())
 print(anova_results)
 '''
 
+
+def anova_std(filename, measure, dimension):
+    """
+    :param filename: 需要进行相关分析的文件地址
+    :param measure: 空气温度，大气压力等文件中包含的度量
+    :param dimension: 维度：经纬高均可
+    :return:
+    """
+    df = pd.read_csv(filename, encoding="utf-8")
+    dim_levels = set()
+    for element in df[dimension]:
+        dim_levels.add(element)
+    dim_levels = list(dim_levels)
+    data_config = {}
+    for dl in dim_levels:
+        data_config[dl] = []
+    print("选定维度的不同水平:{}：".format(dim_levels))
+    for i in range(len(df[dimension])):
+        data_config[df[dimension][i]].append(df[measure][i])
+    df = pd.DataFrame(data_config)
+    data = df.values.T
+    l = len(data)  # l个水平
+    n = len(data[0])  # 每组的数据量
+    N = l * n  # 总样本数
+    groupSum = []  # 每组总和
+    groupSqurSum = []  # 每组方差
+    groupMean = []  # 每组均值
+    groupSum2 = []  # 每组和的平方
+    allSum2 = 0  # 每组和的平方的总和
+
+    for i in range(l):
+        groupSum.append(sum(data[i]))
+        groupMean.append(np.mean(data[i]))
+        # groupSqurSum.append(np.var(data[i]))
+        groupSqurSum.append(sum(map(lambda x: x * x, data[i])))
+        groupSum2.append(pow(sum(data[i]), 2))
+        allSum2 += pow(sum(data[i]), 2)
+    allSum = sum(groupSum)  # 总和
+    allSqurSum2 = pow(allSum, 2) / N  # 总和的平方
+    allSum2 = allSum2 / n
+    allSqurSum = sum(groupSqurSum)
+
+    G1 = allSum2 - allSqurSum2
+    G2 = allSqurSum - allSum2
+    G3 = allSqurSum - allSqurSum2
+
+    inDegree = l - 1
+    outDegree = N - l
+    SSE = G2
+    SSA = G1
+    F = (G1 / (l - 1)) / (G2 / (N - l))
+    '''
+    组内自由度k-1；组间自由度n-k；样本总数
+    组内离差平方和SSE；组间平方和SSA；单因素方差分析结果F
+    data数据用于绘图'''
+    data = data.tolist()
+    result = {"inDegree": inDegree, "outDegree": outDegree, "N": N, "SSE": SSE, "SSA": SSA, "F": F, "data": data}
+    return result
+
+
+# io = r"E:\datacube_new\weekend\Datacubeweb_backend_Django\analysis\xmlCsv\地形环境\land2.csv"
+# rs = anova_std(filename=io, measure="AIR_TEMPERATURE", dimension="LATITUDE")
+
+

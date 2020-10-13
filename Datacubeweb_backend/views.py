@@ -483,8 +483,10 @@ def Anova(request):
     if request.method == 'POST':  # 当提交表单时
         if request.POST:
             address = request.POST.get('address', 0)
-            if address:
-                target = json.dumps(coeff.anova(address))
+            measure = request.POST.get('measure', 0)
+            dimension = request.POST.get('dimension', 0)
+            if address and measure and dimension:
+                target = json.dumps(coeff.anova_std(filename=address,measure=measure,dimension=dimension))
                 return HttpResponse(target)
             else:
                 return HttpResponse('输入错误')
