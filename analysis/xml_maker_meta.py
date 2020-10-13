@@ -105,6 +105,9 @@ def xml_make_std(config_dic=None, write_csv=False):
     DOMTree_meta = xml.dom.minidom.parseString(xml_meta)
     meta_dt = DOMTree_meta.documentElement
     attibute_list = meta_dt.getElementsByTagName('attribute')
+    # headerList列表用于存放从元数据XML中读取到的表头信息（也就是度量）,
+    # 元数据XML中表头信息必须与数据文件中不同度量出现的顺序一一对应，因为这关系到后续的写文件
+    headerList = []
     for attibute in attibute_list:
         attr_name = attibute.getAttribute("name")
         # 获取经纬高的范围
@@ -127,6 +130,8 @@ def xml_make_std(config_dic=None, write_csv=False):
             latitude_meta_delta = float(attibute.getAttribute("value"))
         elif attr_name == "height_delta":
             height_meta_delta = float(attibute.getAttribute("value"))
+        elif attr_name == "eac":
+            headerList.append(re.sub("EAC_", "", attibute.getAttribute("value")))
 
     # 根据主题选择csv文件与XML文件所保存的位置
     if config_dic['theme'] == 'Atmosphere':
@@ -186,58 +191,50 @@ def xml_make_std(config_dic=None, write_csv=False):
         i2 = int((latMax - latitude_meta_min) / latitude_meta_delta)
         k1 = int((heightMin - height_meta_min)/ height_meta_delta)
         k2 = int((heightMax - height_meta_min) / height_meta_delta)
-
+        print("j1:{},j2:{},i1:{},i2:{},k1:{},k2:{}".format(j1, j2, i1, i2, k1, k2))
         measure_serial = set()
+        header_num =len(headerList)
         for measure in config_dic["measures"]:
-            if "AIR_TEMPERATURE" in measure["eac"]:
-                measure_serial.add(0)
-            if "ATM_PRESSURE" in measure["eac"]:
-                measure_serial.add(1)
-            if "WIND_SPEED_U" in measure["eac"]:
-                measure_serial.add(2)
-            if "WIND_SPEED_V" in measure["eac"]:
-                measure_serial.add(3)
-            if "WIND_SPEED_W" in measure["eac"]:
-                measure_serial.add(4)
+            for i in range(header_num):
+                if headerList[i] in measure["eac"]:
+                    measure_serial.add(i)
         measure_serial = list(measure_serial)
         measure_serial.sort()
 
-        with open(csvName, 'a') as f:
+        with open(csvName, 'w') as f:
             csvHeader = ""
-            allHeaders = ["AIR_TEMPERATURE", "ATM_PRESSURE",  "WIND_SPEED_U", "WIND_SPEED_V", "WIND_SPEED_W"]
+            # allHeaders = ["AIR_TEMPERATURE", "ATM_PRESSURE",  "WIND_SPEED_U", "WIND_SPEED_V", "WIND_SPEED_W"]
             for m in measure_serial:
-                csvHeader += (allHeaders[m] + ",")
+                csvHeader += (headerList[m] + ",")  # csvHeader += (allHeaders[m] + ",")
             csvHeader += "LATITUDE,LONGITUDE,HEIGHT"
             csvHeader += "\n"
             f.writelines(csvHeader)
 
         k_dt = 0
-        j_dt = 0
-        i_dt = 0
         height_n = int((height_meta_max-height_meta_min)/height_meta_delta+1)
         longitude_n = int((longitude_meta_max-longitude_meta_min)/longitude_meta_delta+1)
         latitude_n = int((latitude_meta_max-latitude_meta_min)/latitude_meta_delta+1)
+
         for k in range(height_n):
             j_dt = 0
-            i_dt = 0
             for j in range(longitude_n):
                 i_dt = 0
                 for i in range(latitude_n):
                     write_flag = False
                     cursor = i + j * longitude_n + k * latitude_n*longitude_n
                     if cursor == i_dt*(latDelta/latitude_meta_delta)+j_dt*longitude_n*(lonDelta/longitude_n) + \
-                            k_dt*longitude_n*latitude_n*(heightDelta/height_n):
+                            k_dt*longitude_n*latitude_n*(heightDelta/height_meta_delta):
                         write_flag = True
                     elif cursor == (i_dt+1)*(latDelta/latitude_meta_delta)+j_dt*longitude_n\
-                            *(lonDelta/longitude_meta_delta)+k_dt*longitude_n*latitude_n*(heightDelta/height_n):
+                            *(lonDelta/longitude_meta_delta)+k_dt*longitude_n*latitude_n*(heightDelta/height_meta_delta):
                         write_flag = True
                         i_dt += 1
-                    elif cursor == i_dt*(latDelta/latitude_meta_delta)+(j_dt+1)*longitude_n\
-                            *(lonDelta/longitude_meta_delta)+k_dt*longitude_n*latitude_n*(heightDelta/height_n):
+                    elif cursor == i_dt*(latDelta/latitude_meta_delta)+(j_dt+1)*longitude_n*\
+                            (lonDelta/longitude_meta_delta)+k_dt*longitude_n*latitude_n*(heightDelta/height_meta_delta):
                         write_flag = True
                         j_dt += 1
-                    elif cursor == i_dt*(latDelta/latitude_meta_delta)+j_dt*longitude_n\
-                            *(lonDelta/longitude_meta_delta)+(k_dt+1)*longitude_n*latitude_n*(heightDelta/height_n):
+                    elif cursor == i_dt*(latDelta/latitude_meta_delta)+j_dt*longitude_n*(lonDelta/longitude_meta_delta)\
+                            +(k_dt+1)*longitude_n*latitude_n*(heightDelta/height_meta_delta):
                         write_flag = True
                         k_dt += 1
 
@@ -248,8 +245,9 @@ def xml_make_std(config_dic=None, write_csv=False):
                             line_to_write += (lines[m]+",")
                         line_to_write += str(i*latitude_meta_delta+latitude_meta_min)+","\
                                          +str(i*longitude_meta_delta+longitude_meta_min)+","\
-                                         +str(i*height_meta_delta+height_meta_min)
+                                         +str(k*height_meta_delta+height_meta_min)
                         line_to_write += "\n"
+                        print("lines_to_write:{}".format(line_to_write))
                         with open(csvName, 'a') as f:
                             f.writelines(line_to_write)
     return
