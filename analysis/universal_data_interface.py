@@ -2,6 +2,11 @@
 # author：yzz    2020.8.23
 import pandas as pd
 import numpy as np
+from xml.dom.minidom import Document
+from xml.dom.minidom import parse
+import xml.dom.minidom
+import pandas as pd
+import re
 
 DATASOURCE = {"TPV": r"analysis/data/TPV.csv"}
 # DATASOURCE = {"TPV": r"./data/TPV.csv"}
@@ -346,5 +351,288 @@ def get_data(Source="TPV",
     else:
         print("无效数据源，全部数据为{}".format(DATASOURCE.keys()))
         return "无效数据源，全部数据为{}".format(DATASOURCE.keys())
+
+
+def get_data_std(Source="TPV",
+             measure="AIR_TEMPERATURE",
+             lonMin=108, lonMax=130,
+             latMin=15, latMax=25,
+             heightMin = 500,heightMax= 25000,
+             timeStamp=0,
+             ratio_lon=1, ratio_lat=1, ratio_h=1,
+             rotate=0):
+    """
+    :param Source: 数据源地址
+    :param measure: 度量，如温度，压强
+    :param lonMin: 查询最小经度范围
+    :param lonMax:  查询最大经度范围
+    :param latMin:  查询最小纬度范围
+    :param latMax:  查询最大纬度范围
+    :param heightMin:  查询最小高度范围
+    :param heightMax:  查询最大高度范围
+    :param timeStamp:  时间offset
+    :param ratio_lon:  经度放大比率，整型
+    :param ratio_lat:  纬度放大比率，整型
+    :param ratio_h:  高度放大比率 整型
+    :param rotate:  旋转方式 默认：0  x<->y:1  x<->z:2  y<->z:3
+    :return: 查询到的数据名，数据或报错信息
+    """
+    # 根据数据源中factlist(事实表)选取数据源；首先读取数据源同名的XML文件的元数据信息
+    meta_xml_path = re.sub(".csv", ".xml", DATASOURCE[Source])
+    xml_meta = open(meta_xml_path).read()
+    xml_meta = xml_meta.replace('<?xml version="1.0" encoding="GBK"?>',
+                                '<?xml version="1.0" encoding="utf-8"?>')
+    xml_meta.encode('utf-8')
+    DOMTree_meta = xml.dom.minidom.parseString(xml_meta)
+    meta_dt = DOMTree_meta.documentElement
+    attribute_list = meta_dt.getElementsByTagName('attribute')
+    # headerList列表用于存放从元数据XML中读取到的表头信息（也就是度量）,
+    # 元数据XML中表头信息必须与数据文件中不同度量出现的顺序一一对应，因为这关系到后续的写文件
+    headerList = []
+    for attribute in attribute_list:
+        attr_name = attribute.getAttribute("name")
+        # 获取经纬高的范围
+        if attr_name == "longitude_min":
+            longitude_meta_min = float(attribute.getAttribute("value"))
+        elif attr_name == "longitude_max":
+            longitude_meta_max = float(attribute.getAttribute("value"))
+        elif attr_name == "latitude_min":
+            latitude_meta_min = float(attribute.getAttribute("value"))
+        elif attr_name == "latitude_max":
+            latitude_meta_max = float(attribute.getAttribute("value"))
+        elif attr_name == "height_min":
+            height_meta_min = float(attribute.getAttribute("value"))
+        elif attr_name == "height_max":
+            height_meta_max = float(attribute.getAttribute("value"))
+        # 获取经纬高的分度
+        elif attr_name == "longitude_delta":
+            longitude_meta_delta = float(attribute.getAttribute("value"))
+        elif attr_name == "latitude_delta":
+            latitude_meta_delta = float(attribute.getAttribute("value"))
+        elif attr_name == "height_delta":
+            height_meta_delta = float(attribute.getAttribute("value"))
+        elif attr_name == "eac":
+            headerList.append(re.sub("EAC_", "", attribute.getAttribute("value")))
+    measure_index = headerList.index(measure)  # 根据输入的measure确定原始数据文件中对应度量的位置
+    # 根据传入数据的情况确定绘制的是折线图、柱状图还是三维标量图
+    filePath = DATASOURCE[Source]
+    data = pd.read_csv(filePath)
+    dim_discard = 0        # 记录返回数据不需要的维度数量
+    flag1 = True    # 是否返回经度数据
+    flag2 = True    # 是否返回纬度数据
+    flag3 = True    # 是否返回高度数据
+    axisName = []
+    if lonMin == lonMax:
+        dim_discard += 1
+        flag1 = False
+    else:
+        axisName.append('longitude')
+
+    if latMax == latMin:
+        dim_discard += 1
+        flag2 = False
+    else:
+        axisName.append('latitude')
+
+    if heightMax == heightMin:
+        dim_discard += 1
+        flag3 = False
+    else:
+        axisName.append('height')
+
+    axisName.append(measure)
+    # 折线图或者柱状图
+    if dim_discard == 2:
+        if lonMax != lonMin:
+            ratio = int(ratio_lon)
+        elif latMax != latMin:
+            ratio = int(ratio_lat)
+        else:
+            ratio = int(ratio_h)
+        factor1 = []
+        factor2 = []
+
+        j1 = int((lonMin - longitude_meta_min) / longitude_meta_delta)
+        j2 = int((lonMax - longitude_meta_min) / longitude_meta_delta)
+        i1 = int((latMin - latitude_meta_min) / latitude_meta_delta)
+        i2 = int((latMax - latitude_meta_min) / latitude_meta_delta)
+        k1 = int((heightMin - height_meta_min) / height_meta_delta)
+        k2 = int((heightMax - height_meta_min) / height_meta_delta)
+
+        longitude_n = int((longitude_meta_max - longitude_meta_min) / longitude_meta_delta + 1)
+        latitude_n = int((latitude_meta_max - latitude_meta_min) / latitude_meta_delta + 1)
+        height_n = int((height_meta_max - height_meta_min) / height_meta_delta + 1)
+
+        for k in range(height_n):
+            for j in range(longitude_n):
+                for i in range(latitude_n):
+                    cursor = i + j * longitude_n + k * latitude_n * longitude_n+ timeStamp * latitude_n*longitude_n*height_n
+                    if i1 <= i <= i2 and j1 <= j <= j2 and k1 <= k <= k2:
+                        lines = data.iloc[cursor].tolist()[0].split()
+                        factor1.append(float(lines[measure_index]))
+                        if flag1:
+                            factor2.append(j * longitude_meta_delta + longitude_meta_min)
+                        elif flag2:
+                            factor2.append(i * latitude_meta_delta + latitude_meta_min)
+                        elif flag3:
+                            factor2.append(k * height_meta_delta + height_meta_min)
+        # print({"xAxisData": factor2, "yAxisData": factor1})
+        xData = []
+        yData = []
+        if ratio < len(factor2):
+            for i in range(len(factor2) // ratio):
+                xi = np.array(factor2[i * ratio:(i + 1) * ratio]).mean()
+                xData.append(xi)
+                yData.append(line_fit(factor2[i * ratio:(i + 1) * ratio], factor1[i * ratio:(i + 1) * ratio], xi))
+            # return {"axisName": axisName, "xAxisData": factor1, "yAxisData": factor2}
+            if rotate == 0:
+                return {"axisName": axisName, "xAxisData": xData, "yAxisData": yData}
+            elif rotate == 1:
+                axisName[0], axisName[1] = axisName[1], axisName[0]
+                return {"axisName": axisName, "xAxisData": yData, "yAxisData": xData}
+            else:
+                return "旋转方式出错"
+        else:
+            return "分辨率设定不合适"
+    # 三维正交散点图
+    else:
+        axisName = ['longitude', 'latitude', 'height', measure]
+        factor1 = []
+        factor2 = []
+        factor3 = []
+        factor4 = []
+        j1 = int((lonMin - longitude_meta_min) / longitude_meta_delta)
+        j2 = int((lonMax - longitude_meta_min) / longitude_meta_delta)
+        i1 = int((latMin - latitude_meta_min) / latitude_meta_delta)
+        i2 = int((latMax - latitude_meta_min) / latitude_meta_delta)
+        k1 = int((heightMin - height_meta_min) / height_meta_delta)
+        k2 = int((heightMax - height_meta_min) / height_meta_delta)
+
+        longitude_n = int((longitude_meta_max - longitude_meta_min) / longitude_meta_delta + 1)
+        latitude_n = int((latitude_meta_max - latitude_meta_min) / latitude_meta_delta + 1)
+        height_n = int((height_meta_max - height_meta_min) / height_meta_delta + 1)
+
+        for k in range(height_n):
+            for j in range(longitude_n):
+                for i in range(latitude_n):
+                    cursor = i + j * longitude_n + k * latitude_n * longitude_n + timeStamp * latitude_n * longitude_n * height_n
+                    if i1 <= i <= i2 and j1 <= j <= j2 and k1 <= k <= k2:
+                        lines = data.iloc[cursor].tolist()[0].split()
+                        factor1.append(float(lines[measure_index]))
+                        factor2.append(j * longitude_meta_delta + longitude_meta_min)
+                        factor3.append(i * latitude_meta_delta + latitude_meta_min)
+                        factor4.append(k * height_meta_delta + height_meta_min)
+
+        if ratio_h == 1 and ratio_lat == 1 and ratio_lon == 1:
+            if rotate == 0:
+                return {"axisName": axisName, "xAxisData": factor2, "yAxisData": factor3, "zAxisData": factor4,
+                        "data": factor1}
+            elif rotate == 1:
+                axisName[0], axisName[1] = axisName[1], axisName[0]
+                return {"axisName": axisName, "xAxisData": factor3, "yAxisData": factor2, "zAxisData": factor4,
+                        "data": factor1}
+            elif rotate == 2:
+                axisName[0], axisName[2] = axisName[2], axisName[0]
+                return {"axisName": axisName, "xAxisData": factor4, "yAxisData": factor3, "zAxisData": factor2,
+                        "data": factor1}
+            elif rotate == 3:
+                axisName[2], axisName[1] = axisName[1], axisName[2]
+                return {"axisName": axisName, "xAxisData": factor2, "yAxisData": factor4, "zAxisData": factor3,
+                        "data": factor1}
+            else:
+                return "旋转方式出错"
+        else:
+            if (j2 - j1 + 1) < ratio_lon or (i2 - i1 + 1) < ratio_lat or (k2 - k1 + 1) < ratio_h:
+                return "分辨率设定不合适"
+            else:
+                # 先对每一个高度上进行最小二乘曲面拟合
+                lat_offset = (i2 - i1 + 1) // ratio_lat
+                lon_offset = (j2 - j1 + 1) // ratio_lon
+                height_offset = (k2 - k1 + 1) // ratio_h
+                new_x_data = []  # 存纬度
+                new_y_data = []  # 存经度
+                new_z_data = []  # 存高度
+                new_v_data = []  # 存值
+                for k in range(k2 - k1 + 1):
+                    for j in range(lon_offset):
+                        for i in range(lat_offset):
+                            xData = []
+                            yData = []
+                            vData = []
+                            for jj in range(ratio_lon):
+                                for ii in range(ratio_lat):
+                                    # 第j层的第i个小块：ii每个小块中维度小循环的遍历 jj每个小块每层经度的遍历
+                                    xData.append(factor2[ii + jj * (i2 - i1 + 1) + i * ratio_lat + j * ratio_lon * (
+                                                i2 - i1 + 1) + k * (i2 - i1 + 1) * (j2 - j1 + 1)])
+                                    yData.append(factor3[ii + jj * (i2 - i1 + 1) + i * ratio_lat + j * ratio_lon * (
+                                                i2 - i1 + 1) + k * (i2 - i1 + 1) * (j2 - j1 + 1)])
+                                    vData.append(factor1[ii + jj * (i2 - i1 + 1) + i * ratio_lat + j * ratio_lon * (
+                                                i2 - i1 + 1) + k * (i2 - i1 + 1) * (j2 - j1 + 1)])
+                            x_temp = np.array(xData).mean()
+                            y_temp = np.array(yData).mean()
+                            new_x_data.append(x_temp)
+                            new_y_data.append(y_temp)
+                            new_z_data.append(factor4[ii + jj * (i2 - i1 + 1) + i * ratio_lat + j * ratio_lon * (
+                                        i2 - i1 + 1) + k * (i2 - i1 + 1) * (j2 - j1 + 1)])
+                            new_v_data.append(curve_fit(xData, yData, vData, x_temp, y_temp))
+                # 再对不同高度上的通过线性插值拟合
+                if ratio_h == 1:
+                    if rotate == 0:
+                        return {"axisName": axisName, "xAxisData": new_x_data, "yAxisData": new_y_data,
+                                "zAxisData": new_z_data, "data": new_v_data}
+                    elif rotate == 1:
+                        axisName[0], axisName[1] = axisName[1], axisName[0]
+                        return {"axisName": axisName, "xAxisData": new_y_data, "yAxisData": new_x_data,
+                                "zAxisData": new_z_data, "data": new_v_data}
+                    elif rotate == 2:
+                        axisName[0], axisName[2] = axisName[2], axisName[0]
+                        return {"axisName": axisName, "xAxisData": new_z_data, "yAxisData": new_y_data,
+                                "zAxisData": new_x_data, "data": new_v_data}
+                    elif rotate == 3:
+                        axisName[2], axisName[1] = axisName[1], axisName[2]
+                        return {"axisName": axisName, "xAxisData": new_x_data, "yAxisData": new_z_data,
+                                "zAxisData": new_y_data, "data": new_v_data}
+                    else:
+                        return "旋转方式出错"
+                else:
+                    x_final_data = []
+                    y_final_data = []
+                    z_final_data = []
+                    v_final_data = []
+                    for k in range(height_offset):
+                        zData = []
+                        vData = []
+                        for j in range(lon_offset):
+                            for i in range(lat_offset):
+                                for kk in range(ratio_h):
+                                    zData.append(new_z_data[
+                                                     i + j * lat_offset + k * ratio_h * lon_offset * lat_offset + kk * lon_offset * lat_offset])
+                                    vData.append(new_v_data[
+                                                     i + j * lat_offset + k * ratio_h * lon_offset * lat_offset + kk * lon_offset * lat_offset])
+                                z_temp = np.array(zData).mean()
+                                z_final_data.append(z_temp)
+                                v_final_data.append(line_fit(zData, vData, z_temp))
+                                x_final_data.append(
+                                    new_x_data[i + j * lat_offset + k * ratio_h * lon_offset * lat_offset])
+                                y_final_data.append(
+                                    new_y_data[i + j * lat_offset + k * ratio_h * lon_offset * lat_offset])
+                print(len(x_final_data))
+                if rotate == 0:
+                    return {"axisName": axisName, "xAxisData": new_x_data, "yAxisData": new_y_data,
+                            "zAxisData": new_z_data, "data": new_v_data}
+                elif rotate == 1:
+                    axisName[0], axisName[1] = axisName[1], axisName[0]
+                    return {"axisName": axisName, "xAxisData": new_y_data, "yAxisData": new_x_data,
+                            "zAxisData": new_z_data, "data": new_v_data}
+                elif rotate == 2:
+                    axisName[0], axisName[2] = axisName[2], axisName[0]
+                    return {"axisName": axisName, "xAxisData": new_z_data, "yAxisData": new_y_data,
+                            "zAxisData": new_x_data, "data": new_v_data}
+                elif rotate == 3:
+                    axisName[2], axisName[1] = axisName[1], axisName[2]
+                    return {"axisName": axisName, "xAxisData": new_x_data, "yAxisData": new_z_data,
+                            "zAxisData": new_y_data, "data": new_v_data}
+                else:
+                    return "旋转方式出错"
 
 

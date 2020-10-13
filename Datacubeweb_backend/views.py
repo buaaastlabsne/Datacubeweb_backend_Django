@@ -342,17 +342,18 @@ def get_data_for_plot(request):
             measure = request.POST.get('measure')
             lonMax = float(request.POST.get('lonMax'))
             lonMin = float(request.POST.get('lonMin'))
+            lonMin = float(request.POST.get('lonMin'))
             latMax = float(request.POST.get('latMax'))
             latMin = float(request.POST.get('latMin'))
             heightMax = int(request.POST.get('heightMax'))
             heightMin = int(request.POST.get('heightMin'))
-            ratio_lon = float(request.POST.get('ratioLon'))
-            ratio_lat = float(request.POST.get('ratioLat'))
-            ratio_h = float(request.POST.get('ratioHeight'))
+            ratio_lon = int(request.POST.get('ratioLon'))
+            ratio_lat = int(request.POST.get('ratioLat'))
+            ratio_h = int(request.POST.get('ratioHeight'))
             timeStamp = int(request.POST.get('timeStamp'))
             rotate = int(request.POST.get('rotate'))
             if Source and measure and lonMax and lonMin and latMax and latMin and heightMin and heightMax:
-                data = universal_data_interface.get_data(Source=Source, measure=measure,
+                data = universal_data_interface.get_data_std(Source=Source, measure=measure,
                                                         lonMin=lonMin, lonMax=lonMax,
                                                         latMin=latMin, latMax=latMax,
                                                         heightMin=heightMin, heightMax=heightMax,
