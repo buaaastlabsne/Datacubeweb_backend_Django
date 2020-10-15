@@ -452,10 +452,10 @@ def get_data_std(Source="TPV",
         factor1 = []
         factor2 = []
 
-        j1 = int((lonMin - longitude_meta_min) / longitude_meta_delta)
-        j2 = int((lonMax - longitude_meta_min) / longitude_meta_delta)
-        i1 = int((latMin - latitude_meta_min) / latitude_meta_delta)
-        i2 = int((latMax - latitude_meta_min) / latitude_meta_delta)
+        i1 = int((lonMin - longitude_meta_min) / longitude_meta_delta)
+        i2 = int((lonMax - longitude_meta_min) / longitude_meta_delta)
+        j1 = int((latMin - latitude_meta_min) / latitude_meta_delta)
+        j2 = int((latMax - latitude_meta_min) / latitude_meta_delta)
         k1 = int((heightMin - height_meta_min) / height_meta_delta)
         k2 = int((heightMax - height_meta_min) / height_meta_delta)
 
@@ -464,16 +464,16 @@ def get_data_std(Source="TPV",
         height_n = int((height_meta_max - height_meta_min) / height_meta_delta + 1)
 
         for k in range(height_n):
-            for j in range(longitude_n):
-                for i in range(latitude_n):
-                    cursor = i + j * longitude_n + k * latitude_n * longitude_n+ timeStamp * latitude_n*longitude_n*height_n
+            for j in range(latitude_n):
+                for i in range(longitude_n):
+                    cursor = i + j * latitude_n + k * longitude_n * latitude_n+ timeStamp * latitude_n*longitude_n*height_n
                     if i1 <= i <= i2 and j1 <= j <= j2 and k1 <= k <= k2:
                         lines = data.iloc[cursor].tolist()[0].split()
                         factor1.append(float(lines[measure_index]))
                         if flag1:
-                            factor2.append(j * longitude_meta_delta + longitude_meta_min)
+                            factor2.append(i * longitude_meta_delta + longitude_meta_min)
                         elif flag2:
-                            factor2.append(i * latitude_meta_delta + latitude_meta_min)
+                            factor2.append(j * latitude_meta_delta + latitude_meta_min)
                         elif flag3:
                             factor2.append(k * height_meta_delta + height_meta_min)
         # print({"xAxisData": factor2, "yAxisData": factor1})
@@ -501,10 +501,10 @@ def get_data_std(Source="TPV",
         factor2 = []
         factor3 = []
         factor4 = []
-        j1 = int((lonMin - longitude_meta_min) / longitude_meta_delta)
-        j2 = int((lonMax - longitude_meta_min) / longitude_meta_delta)
-        i1 = int((latMin - latitude_meta_min) / latitude_meta_delta)
-        i2 = int((latMax - latitude_meta_min) / latitude_meta_delta)
+        i1 = int((lonMin - longitude_meta_min) / longitude_meta_delta)
+        i2 = int((lonMax - longitude_meta_min) / longitude_meta_delta)
+        j1 = int((latMin - latitude_meta_min) / latitude_meta_delta)
+        j2 = int((latMax - latitude_meta_min) / latitude_meta_delta)
         k1 = int((heightMin - height_meta_min) / height_meta_delta)
         k2 = int((heightMax - height_meta_min) / height_meta_delta)
 
@@ -513,14 +513,14 @@ def get_data_std(Source="TPV",
         height_n = int((height_meta_max - height_meta_min) / height_meta_delta + 1)
 
         for k in range(height_n):
-            for j in range(longitude_n):
-                for i in range(latitude_n):
-                    cursor = i + j * longitude_n + k * latitude_n * longitude_n + timeStamp * latitude_n * longitude_n * height_n
+            for j in range(latitude_n):
+                for i in range(longitude_n):
+                    cursor = i + j * latitude_n + k * longitude_n * latitude_n + timeStamp * latitude_n * longitude_n * height_n
                     if i1 <= i <= i2 and j1 <= j <= j2 and k1 <= k <= k2:
                         lines = data.iloc[cursor].tolist()[0].split()
                         factor1.append(float(lines[measure_index]))
-                        factor2.append(j * longitude_meta_delta + longitude_meta_min)
-                        factor3.append(i * latitude_meta_delta + latitude_meta_min)
+                        factor2.append(i * longitude_meta_delta + longitude_meta_min)
+                        factor3.append(j * latitude_meta_delta + latitude_meta_min)
                         factor4.append(k * height_meta_delta + height_meta_min)
 
         if ratio_h == 1 and ratio_lat == 1 and ratio_lon == 1:
@@ -542,37 +542,37 @@ def get_data_std(Source="TPV",
             else:
                 return "旋转方式出错"
         else:
-            if (j2 - j1 + 1) < ratio_lon or (i2 - i1 + 1) < ratio_lat or (k2 - k1 + 1) < ratio_h:
+            if (i2 - i1 + 1) < ratio_lon or (j2 - j1 + 1) < ratio_lat or (k2 - k1 + 1) < ratio_h:
                 return "分辨率设定不合适"
             else:
                 # 先对每一个高度上进行最小二乘曲面拟合
-                lat_offset = (i2 - i1 + 1) // ratio_lat
-                lon_offset = (j2 - j1 + 1) // ratio_lon
+                lat_offset = (j2 - j1 + 1) // ratio_lat
+                lon_offset = (i2 - i1 + 1) // ratio_lon
                 height_offset = (k2 - k1 + 1) // ratio_h
                 new_x_data = []  # 存纬度
                 new_y_data = []  # 存经度
                 new_z_data = []  # 存高度
                 new_v_data = []  # 存值
                 for k in range(k2 - k1 + 1):
-                    for j in range(lon_offset):
-                        for i in range(lat_offset):
+                    for j in range(lat_offset):
+                        for i in range(lon_offset):
                             xData = []
                             yData = []
                             vData = []
-                            for jj in range(ratio_lon):
-                                for ii in range(ratio_lat):
+                            for jj in range(ratio_lat):
+                                for ii in range(ratio_lon):
                                     # 第j层的第i个小块：ii每个小块中维度小循环的遍历 jj每个小块每层经度的遍历
-                                    xData.append(factor2[ii + jj * (i2 - i1 + 1) + i * ratio_lat + j * ratio_lon * (
+                                    xData.append(factor2[ii + jj * (i2 - i1 + 1) + i * ratio_lon + j * ratio_lat * (
                                                 i2 - i1 + 1) + k * (i2 - i1 + 1) * (j2 - j1 + 1)])
-                                    yData.append(factor3[ii + jj * (i2 - i1 + 1) + i * ratio_lat + j * ratio_lon * (
+                                    yData.append(factor3[ii + jj * (i2 - i1 + 1) + i * ratio_lon + j * ratio_lat * (
                                                 i2 - i1 + 1) + k * (i2 - i1 + 1) * (j2 - j1 + 1)])
-                                    vData.append(factor1[ii + jj * (i2 - i1 + 1) + i * ratio_lat + j * ratio_lon * (
+                                    vData.append(factor1[ii + jj * (i2 - i1 + 1) + i * ratio_lon + j * ratio_lat * (
                                                 i2 - i1 + 1) + k * (i2 - i1 + 1) * (j2 - j1 + 1)])
                             x_temp = np.array(xData).mean()
                             y_temp = np.array(yData).mean()
                             new_x_data.append(x_temp)
                             new_y_data.append(y_temp)
-                            new_z_data.append(factor4[ii + jj * (i2 - i1 + 1) + i * ratio_lat + j * ratio_lon * (
+                            new_z_data.append(factor4[ii + jj * (i2 - i1 + 1) + i * ratio_lon + j * ratio_lat * (
                                         i2 - i1 + 1) + k * (i2 - i1 + 1) * (j2 - j1 + 1)])
                             new_v_data.append(curve_fit(xData, yData, vData, x_temp, y_temp))
                 # 再对不同高度上的通过线性插值拟合
@@ -602,21 +602,20 @@ def get_data_std(Source="TPV",
                     for k in range(height_offset):
                         zData = []
                         vData = []
-                        for j in range(lon_offset):
-                            for i in range(lat_offset):
+                        for j in range(lat_offset):
+                            for i in range(lon_offset):
                                 for kk in range(ratio_h):
                                     zData.append(new_z_data[
-                                                     i + j * lat_offset + k * ratio_h * lon_offset * lat_offset + kk * lon_offset * lat_offset])
+                                                     i + j * lon_offset + k * ratio_h * lon_offset * lat_offset + kk * lon_offset * lat_offset])
                                     vData.append(new_v_data[
-                                                     i + j * lat_offset + k * ratio_h * lon_offset * lat_offset + kk * lon_offset * lat_offset])
+                                                     i + j * lon_offset + k * ratio_h * lon_offset * lat_offset + kk * lon_offset * lat_offset])
                                 z_temp = np.array(zData).mean()
                                 z_final_data.append(z_temp)
                                 v_final_data.append(line_fit(zData, vData, z_temp))
                                 x_final_data.append(
-                                    new_x_data[i + j * lat_offset + k * ratio_h * lon_offset * lat_offset])
+                                    new_x_data[i + j * lon_offset + k * ratio_h * lon_offset * lat_offset])
                                 y_final_data.append(
-                                    new_y_data[i + j * lat_offset + k * ratio_h * lon_offset * lat_offset])
-                print(len(x_final_data))
+                                    new_y_data[i + j * lon_offset + k * ratio_h * lon_offset * lat_offset])
                 if rotate == 0:
                     return {"axisName": axisName, "xAxisData": new_x_data, "yAxisData": new_y_data,
                             "zAxisData": new_z_data, "data": new_v_data}

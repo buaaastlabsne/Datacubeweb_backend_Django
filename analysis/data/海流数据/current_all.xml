@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="GBK"?>
+	<metadata>
+		<attribute name="model" value="grid"/>
+		<attribute name="format" value="csv"/>
+		<attribute name="ecc" value="ECC_ATMOSPHERE_PROPERTY_SET"/>
+		<attribute name="eac" value="OCEAN_CURRENT_U"/>
+		<attribute name="CHNName" value="洋流速度U分量"/>
+		<attribute name="unit" value="m/s"/>
+		<attribute name="eac" value="OCEAN_CURRENT_V"/>
+		<attribute name="CHNName" value="洋流速度V分量"/>
+		<attribute name="unit" value="m/s"/>
+		<attribute name="data_type" value="double"/>
+		<attribute name="time_start" value="20040701000000"/>
+		<attribute name="time_delta" value="3600"/>
+		<attribute name="time_n" value="744"/>
+		<attribute name="longitude_min" value="108"/>
+		<attribute name="longitude_max" value="120"/>
+		<attribute name="longitude_delta" value="0.1"/>
+		<attribute name="latitude_min" value="15"/>
+		<attribute name="latitude_max" value="25"/>
+		<attribute name="latitude_delta" value="0.1"/>
+		<attribute name="height_max" value="600"/>
+		<attribute name="height_min" value="0"/>
+		<attribute name="height_delta" value="1"/>
+	</metadata>
