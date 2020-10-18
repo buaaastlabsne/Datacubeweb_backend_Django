@@ -22,18 +22,22 @@ def coeff(filename=None, measures=None):
         return result
     else:
         data = pd.read_csv(filename)
-        pearson = data.corr().loc[measures[0], measures[1]]  # 计算pearson相关系数
-        kendall = data.corr('kendall').loc[measures[0], measures[1]]  # Kendall Tau相关系数
-        spearman = data.corr('spearman').loc[measures[0], measures[1]]  # spearman秩相关
+        corr_data =  data.loc[:,[measures[0], measures[1]]]
+        col = list(corr_data.columns)
+        corr_data[col] = corr_data[col].apply(pd.to_numeric, errors='coerce').fillna(0.0)
+        pearson = corr_data.corr()  # 计算pearson相关系数
+        kendall = corr_data.corr('kendall')  # Kendall Tau相关系数
+        spearman = corr_data.corr('spearman')   # spearman秩相关
         plotData = []
         for i in range(len(data[measures[0]])):
-            plotData.append([data[measures[0]][i],data[measures[1]][i]])
-        return {"pearson": pearson, "kendall": kendall, "spearman": spearman, "data": plotData}
+            plotData.append([data[measures[0]][i], data[measures[1]][i]])
+        return {"pearson": pearson[measures[0]][measures[1]], "kendall": kendall[measures[0]][measures[1]],
+                "spearman": spearman[measures[0]][measures[1]], "data": plotData}
 
 # io ="E:\\datacube_new\\yzz\\Datacubeweb_backend_Django\\analysis\\ptcoeff.xls"
-# r = coeff(io)
-
-
+# io = r"E:\datacube_new\weekend\Datacubeweb_backend_Django\analysis\xmlCsv\海洋环境\this3.csv"
+# r = coeff(io, ["AIR_TEMPERATURE","ATM_PRESSURE"])
+# print(r)
 # 单因素方差分析，输入待分析文件的地址
 def anova(filename):
     df = pd.read_excel(filename, header=None)
@@ -119,7 +123,7 @@ def anova_std(filename, measure, dimension):
         data_config[dl] = []
     print("选定维度的不同水平:{}：".format(dim_levels))
     for i in range(len(df[dimension])):
-        data_config[df[dimension][i]].append(df[measure][i])
+        data_config[df[dimension][i]].append(float(df[measure][i]))
     df = pd.DataFrame(data_config)
     data = df.values.T
     l = len(data)  # l个水平
