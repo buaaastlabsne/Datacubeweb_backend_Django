@@ -360,13 +360,13 @@ def xml_make_std(config_dic=None, write_csv=False):
         heightMin = float(config_dic["range"][3]["height_min"])
         heightDelta = float(config_dic["range"][3]["height_delta"])
 
-        i1 = int((lonMin - longitude_meta_min) / longitude_meta_delta)
-        i2 = int((lonMax - longitude_meta_min) / longitude_meta_delta)
-        j1 = int((latMin - latitude_meta_min) / latitude_meta_delta)
-        j2 = int((latMax - latitude_meta_min) / latitude_meta_delta)
-        k1 = int((heightMin - height_meta_min)/ height_meta_delta)
-        k2 = int((heightMax - height_meta_min) / height_meta_delta)
-        print("j1:{},j2:{},i1:{},i2:{},k1:{},k2:{}".format(j1, j2, i1, i2, k1, k2))
+        i1 = int(round(float(format((lonMin - longitude_meta_min) / longitude_meta_delta, ".8f"))))
+        i2 = int(round(float(format((lonMax - longitude_meta_min) / longitude_meta_delta, ".8f"))))
+        j1 = int(round(float(format((latMin - latitude_meta_min) / latitude_meta_delta, ".8f"))))
+        j2 = int(round(float(format((latMax - latitude_meta_min) / latitude_meta_delta, ".8f"))))
+        k1 = int(round(float(format((heightMin - height_meta_min) / height_meta_delta, ".8f"))))
+        k2 = int(round(float(format((heightMax - height_meta_min) / height_meta_delta, ".8f"))))
+
         measure_serial = set()
         header_num =len(headerList)
         for measure in config_dic["measures"]:
@@ -377,54 +377,43 @@ def xml_make_std(config_dic=None, write_csv=False):
         measure_serial.sort()
 
         with open(csvName, 'w') as f:
-            csvHeader = ""
-            # allHeaders = ["AIR_TEMPERATURE", "ATM_PRESSURE",  "WIND_SPEED_U", "WIND_SPEED_V", "WIND_SPEED_W"]
+            csvHeader = "HEIGHT,LATITUDE,LONGITUDE,"
             for m in measure_serial:
                 csvHeader += (headerList[m] + ",")  # csvHeader += (allHeaders[m] + ",")
-            csvHeader += "LATITUDE,LONGITUDE,HEIGHT"
             csvHeader += "\n"
             f.writelines(csvHeader)
-
-        k_dt = 0
+        # 对于数据集而言的经纬高的数据量
         height_n = int((height_meta_max-height_meta_min)/height_meta_delta+1)
         longitude_n = int((longitude_meta_max-longitude_meta_min)/longitude_meta_delta+1)
         latitude_n = int((latitude_meta_max-latitude_meta_min)/latitude_meta_delta+1)
+        # 对于某次查询而言的经纬高的数据量
+        height_num = int((heightMax-heightMin)//heightDelta)+1
+        longitude_num = int((lonMax-lonMin)/lonDelta)+1
+        latitude_num = int((latMax-latMin)/latDelta)+1
+        print("height_num:{} lat_num:{} lon_num:{}_".format(height_num,latitude_num, longitude_num))
+        tail_h = int(round(float(format((heightMin - height_meta_min) % heightDelta, ".8f")) / height_meta_delta))
+        tail_lon = int(round(float(format((lonMin - longitude_meta_min) % lonDelta, ".8f")) / longitude_meta_delta))
+        tail_lat = int(round(float(format((latMin - latitude_meta_min) % latDelta, ".8f")) / latitude_meta_delta))
+        ratio_h = heightDelta/height_meta_delta
+        ratio_lon = lonDelta/longitude_meta_delta
+        ratio_lat = latDelta/latitude_meta_delta
 
-        for k in range(height_n):
-            j_dt = 0
-            for j in range(latitude_n):
-                i_dt = 0
-                for i in range(longitude_n):
-                    write_flag = False
-                    cursor = i + j * latitude_n + k * longitude_n*latitude_n
-                    if cursor == i_dt*(lonDelta/longitude_meta_delta)+j_dt*latitude_n*(latDelta/latitude_n) + \
-                            k_dt*latitude_n*longitude_n*(heightDelta/height_meta_delta):
-                        write_flag = True
-                    elif cursor == (i_dt+1)*(lonDelta/longitude_meta_delta)+j_dt*latitude_n\
-                            *(latDelta/latitude_meta_delta)+k_dt*latitude_n*longitude_n*(heightDelta/height_meta_delta):
-                        write_flag = True
-                        i_dt += 1
-                    elif cursor == i_dt*(lonDelta/longitude_meta_delta)+(j_dt+1)*latitude_n*\
-                            (latDelta/latitude_meta_delta)+k_dt*latitude_n*longitude_n*(heightDelta/height_meta_delta):
-                        write_flag = True
-                        j_dt += 1
-                    elif cursor == i_dt*(lonDelta/longitude_meta_delta)+j_dt*latitude_n*(latDelta/latitude_meta_delta)\
-                            +(k_dt+1)*latitude_n*longitude_n*(heightDelta/height_meta_delta):
-                        write_flag = True
-                        k_dt += 1
+        for k in range(height_num):
+            for j in range(latitude_num):
+                for i in range(longitude_num):
+                    cursor = (i*ratio_lon+tail_lon) + (j*ratio_lat+tail_lat)*longitude_n \
+                             + (k*ratio_h+tail_h)*latitude_n*longitude_n
 
-                    if i1 <= i <= i2 and j1 <= j <= j2 and k1 <= k <= k2 and write_flag:
-                        lines = data.iloc[cursor].tolist()[0].split()
-                        line_to_write = ""
-                        for m in measure_serial:
-                            line_to_write += (lines[m]+",")
-                        line_to_write += str(j*latitude_meta_delta+latitude_meta_min)+","\
-                                         +str(i*longitude_meta_delta+longitude_meta_min)+","\
-                                         +str(k*height_meta_delta+height_meta_min)
-                        line_to_write += "\n"
-                        # print("lines_to_write:{}".format(line_to_write))
-                        with open(csvName, 'a') as f:
-                            f.writelines(line_to_write)
+                    lines = data.iloc[int(cursor)].tolist()[0].split()
+                    line_to_write = str((k*ratio_h+tail_h)*height_meta_delta+height_meta_min)+","\
+                                    + str((j*ratio_lat+tail_lat)*latitude_meta_delta+latitude_meta_min)+","\
+                                    + str((i*ratio_lon+tail_lon)*longitude_meta_delta+longitude_meta_min)+","
+                    for m in measure_serial:
+                        line_to_write += (lines[m]+",")
+                    line_to_write += "\n"
+                    with open(csvName, 'a') as f:
+                        f.writelines(line_to_write)
+
     return
 
 
