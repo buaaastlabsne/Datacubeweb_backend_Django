@@ -350,7 +350,7 @@ def get_data_for_plot(request):
             ratio_lon = int(request.POST.get('ratioLon'))
             ratio_lat = int(request.POST.get('ratioLat'))
             ratio_h = int(request.POST.get('ratioHeight'))
-            timeStamp = int(request.POST.get('timeStamp'))
+            timeStamp = str(request.POST.get('timeStamp'))
             rotate = int(request.POST.get('rotate'))
             if Source and measure and lonMax and lonMin and latMax and latMin and heightMin and heightMax:
                 data = universal_data_interface.get_data_std(Source=Source, measure=measure,
@@ -360,7 +360,6 @@ def get_data_for_plot(request):
                                                         ratio_lon=ratio_lon, ratio_lat=ratio_lat, ratio_h=ratio_h,
                                                         timeStamp=timeStamp,
                                                         rotate=rotate)
-                print(data)
                 if type(data)== type("0"):
                     return  HttpResponseBadRequest
                 data = json.dumps(data)

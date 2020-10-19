@@ -3,6 +3,7 @@
 from xml.dom.minidom import parse
 import xml.dom.minidom
 import re
+import datetime
 # from lxml import html
 
 
@@ -38,7 +39,9 @@ def xml_to_str_std(filename):
                   "longitude": [],
                   "latitude": [],
                   "height": [],
-                  "ratio_resolution": [0]*3}
+                  "time": [],   # 时间开始和结束的两个时刻
+                  "allTimes":[],  # 所有时刻的时间的字符串
+                  "ratio_resolution": [0]*4}  # 按照经、纬、高、时间的顺序存放分辨率
     print(filename)
     meta_info["name"] = re.search(r'([a-zA-Z0-9_]{1,100})\.(xml)$', filename).group(0)
     xml_file_string = open(filename).read()
@@ -76,6 +79,24 @@ def xml_to_str_std(filename):
             meta_info["ratio_resolution"][1] = attibute.getAttribute("value")
         elif attr_name == "height_delta":
             meta_info["ratio_resolution"][2] = attibute.getAttribute("value")
+        elif attr_name == "time_delta":
+            meta_info["ratio_resolution"][3] = attibute.getAttribute("value")
+            time_delta = int(attibute.getAttribute("value"))
+        # 获取时间的范围，首先保存时间开始，时间间隔，以及时刻的数量
+        elif attr_name == "time_start":
+            time_start = int(attibute.getAttribute("value"))
+            meta_info["time"].append(timeFormat(time_start).strftime("%Y-%m-%d %H:%M:%S"))
+        elif attr_name == "time_n":
+            time_n = int(attibute.getAttribute("value"))
+
+    meta_info["time"].append(
+        (timeFormat(time_start)+datetime.timedelta(seconds=(time_n-1)*time_delta)).strftime("%Y-%m-%d %H:%M:%S"))
+
+    for i in range(time_n):
+        first_time = timeFormat(time_start)
+        this_time = first_time+datetime.timedelta(seconds=i*time_delta)
+        time_str = this_time.strftime("%Y-%m-%d %H:%M:%S")
+        meta_info["allTimes"].append(time_str)
     return meta_info
 
 
@@ -100,7 +121,7 @@ def xml_to_tree_dic(fileName):
 # adic = xml_to_str(filename)
 # print(adic)
 
-filename = r'E:/datacube_new/weekend/Datacubeweb_backend_Django/analysis/tpv_std.xml'
+# filename = r'E:/datacube_new/weekend/Datacubeweb_backend_Django/analysis/tpv_std.xml'
 # adic2 = xml_to_str_std(filename)
 # print(adic2)
 
@@ -115,3 +136,28 @@ filename = r'E:/datacube_new/weekend/Datacubeweb_backend_Django/analysis/tpv_std
 # 解析XML为前端树所需的字典
 # tree_str = xml_to_tree_dic(filename)
 # print("tree:", tree_str)
+
+
+def timeFormat(time_num):
+    # 输入的是类似于20110428120000格式的数据
+    YYYY = time_num//10000000000
+    time_num = time_num % 10000000000
+
+    MM = time_num//100000000
+    time_num = time_num % 100000000
+
+    DD = time_num//1000000
+    time_num = time_num % 1000000
+
+    hh = time_num // 10000
+    time_num = time_num % 10000
+
+    mm = time_num // 100
+    ss = time_num % 100
+    time_std = datetime.datetime(YYYY, MM, DD, hh, mm, ss)
+    time_str = time_std.strftime("%Y-%m-%d %H:%M:%S")
+    # print(time_str)
+    # print(YYYY, MM, DD, hh, mm, ss)
+    return time_std
+
+# timeFormat(20110428123059)

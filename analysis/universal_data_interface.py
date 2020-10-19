@@ -7,6 +7,8 @@ from xml.dom.minidom import parse
 import xml.dom.minidom
 import pandas as pd
 import re
+import datetime
+from analysis.xml_parser_meta import timeFormat
 
 DATASOURCE = {"TPV": r"analysis/data/TPV.csv"}
 # DATASOURCE = {"TPV": r"./data/TPV.csv"}
@@ -358,7 +360,7 @@ def get_data_std(Source="TPV",
              lonMin=108, lonMax=130,
              latMin=15, latMax=25,
              heightMin = 500,heightMax= 25000,
-             timeStamp=0,
+             timeStamp=None,
              ratio_lon=1, ratio_lat=1, ratio_h=1,
              rotate=0):
     """
@@ -370,7 +372,7 @@ def get_data_std(Source="TPV",
     :param latMax:  查询最大纬度范围
     :param heightMin:  查询最小高度范围
     :param heightMax:  查询最大高度范围
-    :param timeStamp:  时间offset
+    :param timeStamp:  选择的具体时刻 eg:"2011-04-28 12:00:00", "2011-04-28 12:15:00", "2011-04-28 12:30:00"
     :param ratio_lon:  经度放大比率，整型
     :param ratio_lat:  纬度放大比率，整型
     :param ratio_h:  高度放大比率 整型
@@ -413,6 +415,19 @@ def get_data_std(Source="TPV",
             height_meta_delta = float(attribute.getAttribute("value"))
         elif attr_name == "eac":
             headerList.append(re.sub("EAC_", "", attribute.getAttribute("value")))
+        elif attr_name == "time_start":
+            time_meta_start = int(attribute.getAttribute("value"))
+        elif attr_name == "time_delta":
+            time_meta_delta = int(attribute.getAttribute("value"))
+        elif attr_name == "time_n":
+            time_meta_n = int(attribute.getAttribute("value"))
+    if timeStamp is None:
+        time_offset = 0
+    else:
+        curr_time = datetime.datetime.strptime(timeStamp, '%Y-%m-%d %H:%M:%S')
+        start_time = timeFormat(time_meta_start)
+        seconds = (curr_time-start_time).total_seconds()
+        time_offset = int(seconds/time_meta_delta)
     measure_index = headerList.index(measure)  # 根据输入的measure确定原始数据文件中对应度量的位置
     # 根据传入数据的情况确定绘制的是折线图、柱状图还是三维标量图
     filePath = DATASOURCE[Source]
@@ -466,7 +481,7 @@ def get_data_std(Source="TPV",
         for k in range(height_n):
             for j in range(latitude_n):
                 for i in range(longitude_n):
-                    cursor = i + j * latitude_n + k * longitude_n * latitude_n+ timeStamp * latitude_n*longitude_n*height_n
+                    cursor = i + j * latitude_n + k * longitude_n * latitude_n + time_offset * latitude_n*longitude_n*height_n
                     if i1 <= i <= i2 and j1 <= j <= j2 and k1 <= k <= k2:
                         lines = data.iloc[cursor].tolist()[0].split()
                         factor1.append(float(lines[measure_index]))
@@ -515,7 +530,7 @@ def get_data_std(Source="TPV",
         for k in range(height_n):
             for j in range(latitude_n):
                 for i in range(longitude_n):
-                    cursor = i + j * latitude_n + k * longitude_n * latitude_n + timeStamp * latitude_n * longitude_n * height_n
+                    cursor = i + j * latitude_n + k * longitude_n * latitude_n  + time_offset * latitude_n * longitude_n * height_n
                     if i1 <= i <= i2 and j1 <= j <= j2 and k1 <= k <= k2:
                         lines = data.iloc[cursor].tolist()[0].split()
                         factor1.append(float(lines[measure_index]))
