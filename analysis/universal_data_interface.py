@@ -9,11 +9,13 @@ import pandas as pd
 import re
 import datetime
 from analysis.xml_parser_meta import timeFormat
+from os import path
 
-DATASOURCE = {"TPV": r"analysis/data/TPV.csv"}
+DATASOURCE = {"TPV": r"analysis/data/TPV.csv",
+              "current":r"E:/datacube_new/weekend/Datacubeweb_backend_Django/analysis/data/海流数据/current_all.csv"}
 # DATASOURCE = {"TPV": r"./data/TPV.csv"}
 TPV_DATATYPE = {"temperature", "pressure"}
-TPV_INDEPENDENT = {"latitude", "longitude", "height"}
+TPV_INDEPENDENT = {"latitude", "longitude", "hempight"}
 
 
 # 线性拟合
@@ -429,9 +431,33 @@ def get_data_std(Source="TPV",
         seconds = (curr_time-start_time).total_seconds()
         time_offset = int(seconds/time_meta_delta)
     measure_index = headerList.index(measure)  # 根据输入的measure确定原始数据文件中对应度量的位置
-    # 根据传入数据的情况确定绘制的是折线图、柱状图还是三维标量图
+    # 根据读取到的XML信息确定范围，用于后续查询等
+    longitude_n = int((longitude_meta_max - longitude_meta_min) / longitude_meta_delta + 1)
+    latitude_n = int((latitude_meta_max - latitude_meta_min) / latitude_meta_delta + 1)
+    height_n = int((height_meta_max - height_meta_min) / height_meta_delta + 1)
+    i1 = int((lonMin - longitude_meta_min) / longitude_meta_delta)
+    i2 = int((lonMax - longitude_meta_min) / longitude_meta_delta)
+    j1 = int((latMin - latitude_meta_min) / latitude_meta_delta)
+    j2 = int((latMax - latitude_meta_min) / latitude_meta_delta)
+    k1 = int((heightMin - height_meta_min) / height_meta_delta)
+    k2 = int((heightMax - height_meta_min) / height_meta_delta)
+
+    # 根据数据文件的大小决定读取方式，小文件则直接读取
     filePath = DATASOURCE[Source]
-    data = pd.read_csv(filePath)
+    file_sieze = path.getsize(filePath)
+    if file_sieze > 500000000:
+        # 文件大约在500M以上，使用chunk读取
+        chunkSize = latitude_n*longitude_n*height_n
+        reader = pd.read_csv(filePath, iterator=True)
+        for i in range(time_offset+1):
+            try:
+                data = reader.get_chunk(chunkSize)
+                # print("分批读取数据时前10行数据是:", chunk[0:10])
+            except StopIteration:
+                print("文件已经全部读取完毕")
+        time_offset = 0  # 这里data只保存了一个时刻的数据，因此置零
+    else:
+        data = pd.read_csv(filePath)
     dim_discard = 0        # 记录返回数据不需要的维度数量
     flag1 = True    # 是否返回经度数据
     flag2 = True    # 是否返回纬度数据
@@ -466,17 +492,6 @@ def get_data_std(Source="TPV",
             ratio = int(ratio_h)
         factor1 = []
         factor2 = []
-
-        i1 = int((lonMin - longitude_meta_min) / longitude_meta_delta)
-        i2 = int((lonMax - longitude_meta_min) / longitude_meta_delta)
-        j1 = int((latMin - latitude_meta_min) / latitude_meta_delta)
-        j2 = int((latMax - latitude_meta_min) / latitude_meta_delta)
-        k1 = int((heightMin - height_meta_min) / height_meta_delta)
-        k2 = int((heightMax - height_meta_min) / height_meta_delta)
-
-        longitude_n = int((longitude_meta_max - longitude_meta_min) / longitude_meta_delta + 1)
-        latitude_n = int((latitude_meta_max - latitude_meta_min) / latitude_meta_delta + 1)
-        height_n = int((height_meta_max - height_meta_min) / height_meta_delta + 1)
 
         for k in range(height_n):
             for j in range(latitude_n):
@@ -516,16 +531,6 @@ def get_data_std(Source="TPV",
         factor2 = []
         factor3 = []
         factor4 = []
-        i1 = int((lonMin - longitude_meta_min) / longitude_meta_delta)
-        i2 = int((lonMax - longitude_meta_min) / longitude_meta_delta)
-        j1 = int((latMin - latitude_meta_min) / latitude_meta_delta)
-        j2 = int((latMax - latitude_meta_min) / latitude_meta_delta)
-        k1 = int((heightMin - height_meta_min) / height_meta_delta)
-        k2 = int((heightMax - height_meta_min) / height_meta_delta)
-
-        longitude_n = int((longitude_meta_max - longitude_meta_min) / longitude_meta_delta + 1)
-        latitude_n = int((latitude_meta_max - latitude_meta_min) / latitude_meta_delta + 1)
-        height_n = int((height_meta_max - height_meta_min) / height_meta_delta + 1)
 
         for k in range(height_n):
             for j in range(latitude_n):
@@ -650,3 +655,12 @@ def get_data_std(Source="TPV",
                     return "旋转方式出错"
 
 
+# outcome = get_data_std(Source="current",
+#              measure="OCEAN_CURRENT_U",
+#              lonMin=108, lonMax=120,
+#              latMin=15, latMax=25,
+#              heightMin = 0,heightMax= 120,
+#              timeStamp="2004-07-01 00:00:00",
+#              ratio_lon=1, ratio_lat=1, ratio_h=1,
+#              rotate=0)
+# print(outcome)

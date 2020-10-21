@@ -15,6 +15,8 @@ EDCS = {
          "WIND_SPEED_U": {"eac": "EAC_WIND_SPEED_U", "CHNName": "经向风速", "unit": "m/s"},
          "WIND_SPEED_V": {"eac": "EAC_WIND_SPEED_V", "CHNName": "纬向风速", "unit": "m/s"},
          "WIND_SPEED_W": {"eac": "EAC_WIND_SPEED_W", "CHNName": "垂直风速", "unit": "m/s"},
+         "OCEAN_CURRENT_U": {"eac":"EAC_OCEAN_CURRENT_U","CHNName": "洋流速度U分量", "unit": "m/s"},
+         "OCEAN_CURRENT_V":{"eac":"EAC_OCEAN_CURRENT_U","CHNName": "洋流速度V分量", "unit": "m/s"}
 }
 
 
@@ -342,7 +344,6 @@ def get_data_for_plot(request):
             measure = request.POST.get('measure')
             lonMax = float(request.POST.get('lonMax'))
             lonMin = float(request.POST.get('lonMin'))
-            lonMin = float(request.POST.get('lonMin'))
             latMax = float(request.POST.get('latMax'))
             latMin = float(request.POST.get('latMin'))
             heightMax = int(request.POST.get('heightMax'))
@@ -352,7 +353,10 @@ def get_data_for_plot(request):
             ratio_h = int(request.POST.get('ratioHeight'))
             timeStamp = str(request.POST.get('timeStamp'))
             rotate = int(request.POST.get('rotate'))
-            if Source and measure and lonMax and lonMin and latMax and latMin and heightMin and heightMax:
+            print("Source:{} measure:{} lonMax:{} lonMin:{} latMax:{} latMin:{} heightMin:{} heightMax:{} "
+                  "ratio_lon:{} tatio_lat:{} ratio_h:{} ratate:{}"
+                  .format(Source,measure,lonMax,lonMin,latMax,latMin,heightMin,heightMax,ratio_lon,ratio_lat,ratio_h,rotate))
+            if Source and measure:
                 data = universal_data_interface.get_data_std(Source=Source, measure=measure,
                                                         lonMin=lonMin, lonMax=lonMax,
                                                         latMin=latMin, latMax=latMax,
@@ -360,7 +364,7 @@ def get_data_for_plot(request):
                                                         ratio_lon=ratio_lon, ratio_lat=ratio_lat, ratio_h=ratio_h,
                                                         timeStamp=timeStamp,
                                                         rotate=rotate)
-                if type(data)== type("0"):
+                if type(data) == type("0"):
                     return  HttpResponseBadRequest
                 data = json.dumps(data)
                 return HttpResponse(data)

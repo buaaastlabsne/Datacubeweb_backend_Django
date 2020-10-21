@@ -5,8 +5,10 @@ import pandas as pd
 import re
 import datetime
 from analysis.xml_parser_meta import timeFormat
+from os import path
 
-DATASOURCE = {"TPV": r"analysis/data/TPV.csv"}  # 保存相应文件的地址
+DATASOURCE = {"TPV": r"analysis/data/TPV.csv",
+              "current": r"E:/datacube_new/weekend/Datacubeweb_backend_Django/analysis/data/海流数据/current_all.csv"}
 
 dataDic = {
     'theme': 'Atmosphere',
@@ -121,34 +123,40 @@ def xml_make_std_lat_lon(config_dic=None, write_csv=False):
     xml_meta.encode('utf-8')
     DOMTree_meta = xml.dom.minidom.parseString(xml_meta)
     meta_dt = DOMTree_meta.documentElement
-    attibute_list = meta_dt.getElementsByTagName('attribute')
+    attribute_list = meta_dt.getElementsByTagName('attribute')
     # headerList列表用于存放从元数据XML中读取到的表头信息（也就是度量）,
     # 元数据XML中表头信息必须与数据文件中不同度量出现的顺序一一对应，因为这关系到后续的写文件
     headerList = []
-    for attibute in attibute_list:
-        attr_name = attibute.getAttribute("name")
+    for attribute in attribute_list:
+        attr_name = attribute.getAttribute("name")
         # 获取经纬高的范围
         if attr_name == "longitude_min":
-            longitude_meta_min = float(attibute.getAttribute("value"))
+            longitude_meta_min = float(attribute.getAttribute("value"))
         elif attr_name == "longitude_max":
-            longitude_meta_max = float(attibute.getAttribute("value"))
+            longitude_meta_max = float(attribute.getAttribute("value"))
         elif attr_name == "latitude_min":
-            latitude_meta_min = float(attibute.getAttribute("value"))
+            latitude_meta_min = float(attribute.getAttribute("value"))
         elif attr_name == "latitude_max":
-            latitude_meta_max = float(attibute.getAttribute("value"))
+            latitude_meta_max = float(attribute.getAttribute("value"))
         elif attr_name == "height_min":
-            height_meta_min = float(attibute.getAttribute("value"))
+            height_meta_min = float(attribute.getAttribute("value"))
         elif attr_name == "height_max":
-            height_meta_max = float(attibute.getAttribute("value"))
+            height_meta_max = float(attribute.getAttribute("value"))
         # 获取经纬高的分度
         elif attr_name == "longitude_delta":
-            longitude_meta_delta = float(attibute.getAttribute("value"))
+            longitude_meta_delta = float(attribute.getAttribute("value"))
         elif attr_name == "latitude_delta":
-            latitude_meta_delta = float(attibute.getAttribute("value"))
+            latitude_meta_delta = float(attribute.getAttribute("value"))
         elif attr_name == "height_delta":
-            height_meta_delta = float(attibute.getAttribute("value"))
+            height_meta_delta = float(attribute.getAttribute("value"))
         elif attr_name == "eac":
-            headerList.append(re.sub("EAC_", "", attibute.getAttribute("value")))
+            headerList.append(re.sub("EAC_", "", attribute.getAttribute("value")))
+        elif attr_name == "time_start":
+            time_meta_start = int(attribute.getAttribute("value"))
+        elif attr_name == "time_delta":
+            time_meta_delta = int(attribute.getAttribute("value"))
+        elif attr_name == "time_n":
+            time_meta_n = int(attribute.getAttribute("value"))
 
     # 根据主题选择csv文件与XML文件所保存的位置
     if config_dic['theme'] == 'Atmosphere':
@@ -187,10 +195,34 @@ def xml_make_std_lat_lon(config_dic=None, write_csv=False):
 
     # 如果有需求，则生成与查询的XML对应的csv数据文件信息
     if write_csv:
+        height_n = int((height_meta_max - height_meta_min) / height_meta_delta + 1)
+        longitude_n = int((longitude_meta_max - longitude_meta_min) / longitude_meta_delta + 1)
+        latitude_n = int((latitude_meta_max - latitude_meta_min) / latitude_meta_delta + 1)
         # csvName是与本次生成的xml的同名的csv文件的名字，将要写入的是根据前端需求生成的数据
         csvName = r"analysis/xmlCsv/" + xmlFolder + '/'+re.sub(".xml", "", str(config_dic["xmlName"]))+".csv"
         # 此处根据事实表读取对应数据文件的位置
-        data = pd.read_csv(DATASOURCE[config_dic["factList"]], header=None)
+        file_sieze = path.getsize(csvName)
+        if file_sieze > 500000000:  # 文件大约在500M以上，使用get_chunk读取
+            print("big file")
+            chunks = []
+            chunkSize = latitude_n * longitude_n * height_n
+            reader = pd.read_csv(csvName, iterator=True)
+
+            curr_time = timeFormat(int(config_dic["range"][0]["time_start"]))
+            start_time = timeFormat(time_meta_start)
+            seconds = (curr_time - start_time).total_seconds()
+            time_offset = int(seconds / time_meta_delta)
+
+            for i in range(time_offset + 1):
+                try:
+                    chunk = reader.get_chunk(chunkSize)
+                    chunks.append(chunk)
+                    print("读取第{}个块".format(i))
+                except StopIteration:
+                    print("文件已经全部读取完毕")
+            data = pd.concat(chunks, ignore_index=True)
+        else:
+            data = pd.read_csv(DATASOURCE[config_dic["factList"]], header=None)
 
         lonMax = float(config_dic["range"][1]["longitude_max"])
         lonMin = float(config_dic["range"][1]["longitude_min"])
@@ -217,6 +249,8 @@ def xml_make_std_lat_lon(config_dic=None, write_csv=False):
                     measure_serial.add(i)
         measure_serial = list(measure_serial)
         measure_serial.sort()
+        print("config_dic[measures]",config_dic["measures"])
+        print("headerList",headerList)
 
         with open(csvName, 'w') as f:
             csvHeader = ""
@@ -228,9 +262,6 @@ def xml_make_std_lat_lon(config_dic=None, write_csv=False):
             f.writelines(csvHeader)
 
         k_dt = 0
-        height_n = int((height_meta_max-height_meta_min)/height_meta_delta+1)
-        longitude_n = int((longitude_meta_max-longitude_meta_min)/longitude_meta_delta+1)
-        latitude_n = int((latitude_meta_max-latitude_meta_min)/latitude_meta_delta+1)
 
         for k in range(height_n):
             j_dt = 0
@@ -309,7 +340,7 @@ def xml_make_std(config_dic=None, write_csv=False):
         elif attr_name == "eac":
             headerList.append(re.sub("EAC_", "", attribute.getAttribute("value")))
         elif attr_name == "time_start":
-            time_meata_start = int(attribute.getAttribute("value"))
+            time_meta_start = int(attribute.getAttribute("value"))
         elif attr_name == "time_delta":
             time_meta_delta = int(attribute.getAttribute("value"))
         elif attr_name == "time_n":
@@ -352,11 +383,33 @@ def xml_make_std(config_dic=None, write_csv=False):
 
     # 如果有需求，则生成与查询的XML对应的csv数据文件信息
     if write_csv:
+        # 对于数据集而言的经纬高的数据量
+        height_n = int((height_meta_max-height_meta_min)/height_meta_delta+1)
+        longitude_n = int((longitude_meta_max-longitude_meta_min)/longitude_meta_delta+1)
+        latitude_n = int((latitude_meta_max-latitude_meta_min)/latitude_meta_delta+1)
         # csvName是与本次生成的xml的同名的csv文件的名字，将要写入的是根据前端需求生成的数据
         csvName = r"analysis/xmlCsv/" + xmlFolder + '/'+re.sub(".xml", "", str(config_dic["xmlName"]))+".csv"
         # 此处根据事实表读取对应数据文件的位置
-        data = pd.read_csv(DATASOURCE[config_dic["factList"]], header=None)
 
+        file_sieze = path.getsize(DATASOURCE[config_dic["factList"]])
+        if file_sieze > 500000000:  # 文件大约在500M以上，使用get_chunk读取
+            chunks = []
+            chunkSize = latitude_n * longitude_n * height_n
+            reader = pd.read_csv(DATASOURCE[config_dic["factList"]], iterator=True)
+
+            curr_time = timeFormat(int(config_dic["range"][0]["time_start"]))
+            start_time = timeFormat(time_meta_start)
+            seconds = (curr_time - start_time).total_seconds()
+            time_offset = int(seconds/time_meta_delta)+(int(int(config_dic["range"][0]["time_delta"])/time_meta_delta))*int(config_dic["range"][0]["time_n"])
+            for i in range(time_offset + 1):
+                try:
+                    chunk = reader.get_chunk(chunkSize)
+                    chunks.append(chunk)
+                except StopIteration:
+                    print("文件已经全部读取完毕")
+            data = pd.concat(chunks, ignore_index=True)
+        else:
+            data = pd.read_csv(DATASOURCE[config_dic["factList"]], header=None)
         timeStart = int(config_dic["range"][0]["time_start"])
         timeDelta = int(config_dic["range"][0]["time_delta"])
         timeNum = int(config_dic["range"][0]["time_n"])
@@ -369,12 +422,7 @@ def xml_make_std(config_dic=None, write_csv=False):
         heightMax = float(config_dic["range"][3]["height_max"])
         heightMin = float(config_dic["range"][3]["height_min"])
         heightDelta = float(config_dic["range"][3]["height_delta"])
-        # i1 = int(round(float(format((lonMin - longitude_meta_min) / longitude_meta_delta, ".8f"))))
-        # i2 = int(round(float(format((lonMax - longitude_meta_min) / longitude_meta_delta, ".8f"))))
-        # j1 = int(round(float(format((latMin - latitude_meta_min) / latitude_meta_delta, ".8f"))))
-        # j2 = int(round(float(format((latMax - latitude_meta_min) / latitude_meta_delta, ".8f"))))
-        # k1 = int(round(float(format((heightMin - height_meta_min) / height_meta_delta, ".8f"))))
-        # k2 = int(round(float(format((heightMax - height_meta_min) / height_meta_delta, ".8f"))))
+
         measure_serial = set()
         header_num =len(headerList)
         for measure in config_dic["measures"]:
@@ -390,19 +438,16 @@ def xml_make_std(config_dic=None, write_csv=False):
                 csvHeader += (headerList[m] + ",")  # csvHeader += (allHeaders[m] + ",")
             csvHeader += "\n"
             f.writelines(csvHeader)
-        # 对于数据集而言的经纬高的数据量
-        height_n = int((height_meta_max-height_meta_min)/height_meta_delta+1)
-        longitude_n = int((longitude_meta_max-longitude_meta_min)/longitude_meta_delta+1)
-        latitude_n = int((latitude_meta_max-latitude_meta_min)/latitude_meta_delta+1)
+
         # 对于某次查询而言的经纬高的数据量
         height_num = int((heightMax-heightMin)//heightDelta)+1
         longitude_num = int((lonMax-lonMin)/lonDelta)+1
         latitude_num = int((latMax-latMin)/latDelta)+1
-        print("height_num:{} lat_num:{} lon_num:{}_".format(height_num,latitude_num, longitude_num))
+        # print("height_num:{} lat_num:{} lon_num:{}_".format(height_num,latitude_num, longitude_num))
         tail_h = int(round(float(format((heightMin - height_meta_min) % heightDelta, ".8f")) / height_meta_delta))
         tail_lon = int(round(float(format((lonMin - longitude_meta_min) % lonDelta, ".8f")) / longitude_meta_delta))
         tail_lat = int(round(float(format((latMin - latitude_meta_min) % latDelta, ".8f")) / latitude_meta_delta))
-        tail_t = int(round(float(format(((timeFormat(timeStart)-timeFormat(time_meata_start)).total_seconds())
+        tail_t = int(round(float(format(((timeFormat(timeStart)-timeFormat(time_meta_start)).total_seconds())
                                         % timeDelta, ".8f")) / time_meta_delta))
         ratio_t = timeDelta/time_meta_delta
         ratio_h = heightDelta/height_meta_delta
@@ -417,9 +462,11 @@ def xml_make_std(config_dic=None, write_csv=False):
                                  + (k*ratio_h+tail_h)*latitude_n*longitude_n\
                                  + (t*ratio_t+tail_t)*longitude_n*latitude_n*height_n
 
-                        lines = data.iloc[int(cursor)].tolist()[0].split()
-
-                        this_time = timeFormat(time_meata_start) \
+                        try:
+                            lines = data.iloc[int(cursor)].tolist()[0].split()
+                        except:
+                            print("cursor:-", cursor)
+                        this_time = timeFormat(time_meta_start) \
                                     + datetime.timedelta(seconds=((t*ratio_t+tail_t)*time_meta_delta))
                         time_str = this_time.strftime("%Y-%m-%d %H:%M:%S")
                         line_to_write = time_str+"," + str((k*ratio_h+tail_h)*height_meta_delta+height_meta_min)+","\
@@ -430,21 +477,6 @@ def xml_make_std(config_dic=None, write_csv=False):
                         line_to_write += "\n"
                         with open(csvName, 'a') as f:
                             f.writelines(line_to_write)
-        # for k in range(height_num):
-        #     for j in range(latitude_num):
-        #         for i in range(longitude_num):
-        #             cursor = (i*ratio_lon+tail_lon) + (j*ratio_lat+tail_lat)*longitude_n \
-        #                      + (k*ratio_h+tail_h)*latitude_n*longitude_n
-        #
-        #             lines = data.iloc[int(cursor)].tolist()[0].split()
-        #             line_to_write = str((k*ratio_h+tail_h)*height_meta_delta+height_meta_min)+","\
-        #                             + str((j*ratio_lat+tail_lat)*latitude_meta_delta+latitude_meta_min)+","\
-        #                             + str((i*ratio_lon+tail_lon)*longitude_meta_delta+longitude_meta_min)+","
-        #             for m in measure_serial:
-        #                 line_to_write += (lines[m]+",")
-        #             line_to_write += "\n"
-        #             with open(csvName, 'a') as f:
-        #                 f.writelines(line_to_write)
 
     return
 

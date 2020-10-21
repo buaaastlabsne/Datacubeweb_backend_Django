@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="ANSI" ?>
+<metadata>
+	<attribute name="model" value="grid" />
+	<attribute name="format" value="text" />
+	<attribute name="ecc" value="ECC_ATMOSPHERE_PROPERTY_SET" />
+	<attribute name="eac" value="EAC_WIND_SPEED_U" />
+	<attribute name="CHNName" value="纬向风速" />
+	<attribute name="unit" value="m/s" />
+	<attribute name="eac" value="EAC_WIND_SPEED_V" />
+	<attribute name="CHNName" value="经向风速" />
+	<attribute name="unit" value="m/s" />
+	<attribute name="eac" value="EAC_WIND_SPEED_W" />
+	<attribute name="CHNName" value="垂向风速" />
+	<attribute name="unit" value="m/s" />
+	<attribute name="eac" value="EAC_AIR_PRESSURE" />
+	<attribute name="CHNName" value="大气压力" />
+	<attribute name="unit" value="kPa" />
+	<attribute name="eac" value="EAC_AIR_TEMPERATURE" />
+	<attribute name="CHNName" value="大气温度" />
+	<attribute name="unit" value="K" />
+	<attribute name="eac" value="EAC_AIR_TEMPERATURE" />
+	<attribute name="CHNName" value="大气温度" />
+	<attribute name="unit" value="℃" />
+	<attribute name="data_type" value="double" />
+	<attribute name="time_start" value="20190601000000" />
+	<attribute name="time_delta" value="1000000" />
+	<attribute name="time_n" value="30" />
+	<attribute name="longitude_min" value="120" />
+	<attribute name="longitude_max" value="130" />
+	<attribute name="longitude_n" value="14" />
+	<attribute name="latitude_min" value="25" />
+	<attribute name="latitude_max" value="35" />
+	<attribute name="latitude_n" value="14" />
+	<attribute name="heights" value="2 122 341 564 792 1025 1264 1509 1761 2019 2285 2558 3130 3739 4388 5083 5833 6648 7540 8527 9633 10894 11601 12376 13234 14203 15320 16656 18752 20781 24015 26662 31306 33753 36105 39802 42839 48219" />
+	<attribute name="height_n" value="38" />
+</metadata>

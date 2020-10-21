@@ -85,12 +85,15 @@ def xml_to_str_std(filename):
         # 获取时间的范围，首先保存时间开始，时间间隔，以及时刻的数量
         elif attr_name == "time_start":
             time_start = int(attibute.getAttribute("value"))
-            meta_info["time"].append(timeFormat(time_start).strftime("%Y-%m-%d %H:%M:%S"))
+            # meta_info["time"].append(timeFormat(time_start).strftime("%Y-%m-%d %H:%M:%S"))
+            meta_info["time"].append(time_start)
         elif attr_name == "time_n":
             time_n = int(attibute.getAttribute("value"))
 
-    meta_info["time"].append(
-        (timeFormat(time_start)+datetime.timedelta(seconds=(time_n-1)*time_delta)).strftime("%Y-%m-%d %H:%M:%S"))
+    # meta_info["time"].append((timeFormat(time_start)+datetime.timedelta(seconds=(time_n-1)*time_delta)).strftime("%Y-%m-%d %H:%M:%S"))
+    time_end = timeFormat(time_start)+datetime.timedelta(seconds=(time_n-1)*time_delta)
+    time_end = stdTime2xmlTime(time_end)
+    meta_info["time"].append(time_end)
 
     for i in range(time_n):
         first_time = timeFormat(time_start)
@@ -139,7 +142,7 @@ def xml_to_tree_dic(fileName):
 
 
 def timeFormat(time_num):
-    # 输入的是类似于20110428120000格式的数据
+    # 输入的是XML文件中类似于20110428120000格式的数据,转换为python内置类型的时间
     YYYY = time_num//10000000000
     time_num = time_num % 10000000000
 
@@ -159,5 +162,17 @@ def timeFormat(time_num):
     # print(time_str)
     # print(YYYY, MM, DD, hh, mm, ss)
     return time_std
+
+
+def stdTime2xmlTime(stdTime):
+    # python内置类型的时间转为XML格式的时间
+    YYYY = stdTime.year
+    MM = stdTime.month
+    DD = stdTime.day
+    hh = stdTime.hour
+    mm = stdTime.minute
+    ss = stdTime.second
+    xmlTime = YYYY*10000000000+MM*100000000+DD*1000000+hh*10000+mm*100+ss
+    return xmlTime
 
 # timeFormat(20110428123059)
