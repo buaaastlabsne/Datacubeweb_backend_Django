@@ -1,36 +1,34 @@
-<?xml version="1.0" encoding="ANSI" ?>
-<metadata>
-	<attribute name="model" value="grid" />
-	<attribute name="format" value="text" />
-	<attribute name="ecc" value="ECC_ATMOSPHERE_PROPERTY_SET" />
-	<attribute name="eac" value="EAC_WIND_SPEED_U" />
-	<attribute name="CHNName" value="çº¬å‘é£Žé€Ÿ" />
-	<attribute name="unit" value="m/s" />
-	<attribute name="eac" value="EAC_WIND_SPEED_V" />
-	<attribute name="CHNName" value="ç»å‘é£Žé€Ÿ" />
-	<attribute name="unit" value="m/s" />
-	<attribute name="eac" value="EAC_WIND_SPEED_W" />
-	<attribute name="CHNName" value="åž‚å‘é£Žé€Ÿ" />
-	<attribute name="unit" value="m/s" />
-	<attribute name="eac" value="EAC_AIR_PRESSURE" />
-	<attribute name="CHNName" value="å¤§æ°”åŽ‹åŠ›" />
-	<attribute name="unit" value="kPa" />
-	<attribute name="eac" value="EAC_AIR_TEMPERATURE" />
-	<attribute name="CHNName" value="å¤§æ°”æ¸©åº¦" />
-	<attribute name="unit" value="K" />
-	<attribute name="eac" value="EAC_AIR_TEMPERATURE" />
-	<attribute name="CHNName" value="å¤§æ°”æ¸©åº¦" />
-	<attribute name="unit" value="â„ƒ" />
-	<attribute name="data_type" value="double" />
-	<attribute name="time_start" value="20190601000000" />
-	<attribute name="time_delta" value="1000000" />
-	<attribute name="time_n" value="30" />
-	<attribute name="longitude_min" value="120" />
-	<attribute name="longitude_max" value="130" />
-	<attribute name="longitude_n" value="14" />
-	<attribute name="latitude_min" value="25" />
-	<attribute name="latitude_max" value="35" />
-	<attribute name="latitude_n" value="14" />
-	<attribute name="heights" value="2 122 341 564 792 1025 1264 1509 1761 2019 2285 2558 3130 3739 4388 5083 5833 6648 7540 8527 9633 10894 11601 12376 13234 14203 15320 16656 18752 20781 24015 26662 31306 33753 36105 39802 42839 48219" />
-	<attribute name="height_n" value="38" />
-</metadata>
+<?xml version="1.0" encoding="GBK"?>
+	<metadata>
+		<attribute name="model" value="grid"/>
+		<attribute name="format" value="csv"/>
+		<attribute name="ecc" value="ECC_ATMOSPHERE_PROPERTY_SET"/>
+		<attribute name="eac" value="EAC_WIND_SPEED_U"/>
+		<attribute name="CHNName" value="¾­Ïò·çËÙ"/>
+		<attribute name="unit" value="m/s"/>
+		<attribute name="eac" value="EAC_WIND_SPEED_V"/>
+		<attribute name="CHNName" value="Î³Ïò·çËÙ"/>
+		<attribute name="unit" value="m/s"/>
+		<attribute name="eac" value="EAC_WIND_SPEED_W"/>
+		<attribute name="CHNName" value="´¹Ö±·çËÙ"/>
+		<attribute name="unit" value="m/s"/>
+		<attribute name="eac" value="EAC_ATM_PRESSURE"/>
+		<attribute name="CHNName" value="´óÆøÑ¹Ç¿"/>
+		<attribute name="unit" value="kPa"/>
+		<attribute name="eac" value="EAC_AIR_TEMPERATURE"/>
+		<attribute name="CHNName" value="´óÆøÎÂ¶È"/>
+		<attribute name="unit" value="K"/>
+		<attribute name="data_type" value="double"/>
+		<attribute name="time_start" value="20190601000000"/>
+		<attribute name="time_delta" value="86400"/>
+		<attribute name="time_n" value="30"/>
+		<attribute name="longitude_min" value="120"/>
+		<attribute name="longitude_max" value="129.75"/>
+		<attribute name="longitude_delta" value="0.75"/>
+		<attribute name="latitude_min" value="25"/>
+		<attribute name="latitude_max" value="34.75"/>
+		<attribute name="latitude_delta" value="0.75"/>
+		<attribute name="height_max" value="30000"/>
+		<attribute name="height_min" value="0"/>
+		<attribute name="height_delta" value="500"/>
+	</metadata>

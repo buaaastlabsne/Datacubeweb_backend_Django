@@ -8,7 +8,8 @@ from analysis.xml_parser_meta import timeFormat
 from os import path
 
 DATASOURCE = {"TPV": r"analysis/data/TPV.csv",
-              "current": r"E:/datacube_new/weekend/Datacubeweb_backend_Django/analysis/data/海流数据/current_all.csv"}
+              "current": r"E:/datacube_new/weekend/Datacubeweb_backend_Django/analysis/data/海流数据/current_all.csv",
+              "donghai":r"E:/datacube_new/weekend/Datacubeweb_backend_Django/analysis/data/N35-W120-S25-E130-0.75_0.75_201906.csv"}
 
 dataDic = {
     'theme': 'Atmosphere',
@@ -374,7 +375,6 @@ def xml_make_std(config_dic=None, write_csv=False):
     for element in config_dic["range"]:
         for k, v in element.items():
             add_attribute(doc, meta_data, k, v)
-
     xmlPath = r"analysis/xmlCsv/"+xmlFolder+'/'+config_dic['xmlName']
     # xmlPath = r"E:/datacube_new/weekend/Datacubeweb_backend_Django/analysis/data/"+ r'/' + config_dic['xmlName']
     f = open(xmlPath, 'w')
@@ -409,7 +409,9 @@ def xml_make_std(config_dic=None, write_csv=False):
                     print("文件已经全部读取完毕")
             data = pd.concat(chunks, ignore_index=True)
         else:
-            data = pd.read_csv(DATASOURCE[config_dic["factList"]], header=None)
+            # data = pd.read_csv(DATASOURCE[config_dic["factList"]], header=None)
+            data = pd.read_csv(DATASOURCE[config_dic["factList"]])
+
         timeStart = int(config_dic["range"][0]["time_start"])
         timeDelta = int(config_dic["range"][0]["time_delta"])
         timeNum = int(config_dic["range"][0]["time_n"])
@@ -463,7 +465,11 @@ def xml_make_std(config_dic=None, write_csv=False):
                                  + (t*ratio_t+tail_t)*longitude_n*latitude_n*height_n
 
                         try:
-                            lines = data.iloc[int(cursor)].tolist()[0].split()
+                            lines = data.iloc[int(cursor)].tolist()
+                            if len(lines) > 1:
+                                pass
+                            else:
+                                lines = lines[0].split()
                         except:
                             print("cursor:-", cursor)
                         this_time = timeFormat(time_meta_start) \
@@ -473,7 +479,7 @@ def xml_make_std(config_dic=None, write_csv=False):
                                         + str((j*ratio_lat+tail_lat)*latitude_meta_delta+latitude_meta_min)+","\
                                         + str((i*ratio_lon+tail_lon)*longitude_meta_delta+longitude_meta_min)+","
                         for m in measure_serial:
-                            line_to_write += (lines[m]+",")
+                            line_to_write += (str(lines[m])+",")
                         line_to_write += "\n"
                         with open(csvName, 'a') as f:
                             f.writelines(line_to_write)

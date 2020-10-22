@@ -22,7 +22,8 @@ def coeff(filename=None, measures=None):
         return result
     else:
         data = pd.read_csv(filename)
-        corr_data =  data.loc[:,[measures[0], measures[1]]]
+        data[data > 10000000] = 0
+        corr_data = data.loc[:,[measures[0], measures[1]]]
         col = list(corr_data.columns)
         corr_data[col] = corr_data[col].apply(pd.to_numeric, errors='coerce').fillna(0.0)
         pearson = corr_data.corr()  # 计算pearson相关系数
@@ -41,6 +42,7 @@ def coeff(filename=None, measures=None):
 # 单因素方差分析，输入待分析文件的地址
 def anova(filename):
     df = pd.read_excel(filename, header=None)
+    df[df > 1000000] = 0
     data = df.values.T
     l = len(data)  # l个水平
     n = len(data[0])   # 每组的数据量

@@ -12,7 +12,8 @@ from analysis.xml_parser_meta import timeFormat
 from os import path
 
 DATASOURCE = {"TPV": r"analysis/data/TPV.csv",
-              "current":r"E:/datacube_new/weekend/Datacubeweb_backend_Django/analysis/data/海流数据/current_all.csv"}
+              "current":r"E:/datacube_new/weekend/Datacubeweb_backend_Django/analysis/data/海流数据/current_all.csv",
+              "donghai":r"E:/datacube_new/weekend/Datacubeweb_backend_Django/analysis/data/N35-W120-S25-E130-0.75_0.75_201906.csv"}
 # DATASOURCE = {"TPV": r"./data/TPV.csv"}
 TPV_DATATYPE = {"temperature", "pressure"}
 TPV_INDEPENDENT = {"latitude", "longitude", "hempight"}
@@ -537,7 +538,12 @@ def get_data_std(Source="TPV",
                 for i in range(longitude_n):
                     cursor = i + j * latitude_n + k * longitude_n * latitude_n  + time_offset * latitude_n * longitude_n * height_n
                     if i1 <= i <= i2 and j1 <= j <= j2 and k1 <= k <= k2:
-                        lines = data.iloc[cursor].tolist()[0].split()
+                        # lines = data.iloc[cursor].tolist()[0].split()
+                        lines = data.iloc[int(cursor)].tolist()
+                        if len(lines) > 1:
+                            pass
+                        else:
+                            lines = lines[0].split()
                         factor1.append(float(lines[measure_index]))
                         factor2.append(i * longitude_meta_delta + longitude_meta_min)
                         factor3.append(j * latitude_meta_delta + latitude_meta_min)

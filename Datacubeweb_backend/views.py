@@ -604,7 +604,6 @@ def xml_make_std(request):
                     {"time_start": "20110428120000", "time_delta": "900", "time_n": "9"},
                     {"longitude_min": "114.014400", "longitude_max": "116.863300", "longitude_delta": "0.2"},
                     {"latitude_min": "18.047620", "latitude_max": "19.952380", "latitude_delta": "0.2"},
-                    # {"heights": "106.655  154.066  204.447  257.986  ","height_n": "4"},
                     {"height_max": "25000", "height_min": "500", "height_delta": "500"}
                 ]
             }
